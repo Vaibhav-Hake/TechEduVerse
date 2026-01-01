@@ -1,0 +1,98 @@
+body{
+    margin:0;
+    font-family: Poppins, sans-serif;
+    background:#eef5ff;
+}
+
+.dashboard-container{
+    display:flex;
+}
+
+.sidebar{
+    width:230px;
+    background:#0057d9;
+    height:100vh;
+    color:white;
+    padding:20px 10px;
+    position:fixed;
+    transition:.3s;
+}
+
+.sidebar.closed{left:-230px;}
+
+.sidebar h2{text-align:center;font-size:1.3rem;margin-bottom:20px;}
+.sidebar a{
+    display:block;
+    padding:12px;
+    color:white;
+    background:rgba(255,255,255,0.12);
+    text-decoration:none;
+    margin:10px 0;
+    border-radius:8px;
+}
+.sidebar a:hover{
+    background:rgba(255,255,255,0.35);
+    transform:translateX(5px);
+}
+
+.main-area{
+    margin-left:230px;
+    padding-top:60px;
+    width:100%;
+}
+.sidebar.closed ~ .main-area{margin-left:0;}
+
+.topbar{
+    height:55px;
+    background:white;
+    display:flex;
+    align-items:center;
+    padding:0 15px;
+    position:fixed;
+    width:100%;
+    box-shadow:0 2px 8px rgba(0,0,0,0.1);
+}
+#menuBtn{
+    font-size:25px;
+    background:none;
+    border:none;
+    color:#0057d9;
+}
+
+#content{padding:25px;}
+
+.card{
+    background:white;
+    padding:15px;
+    border-radius:10px;
+    margin-bottom:18px;
+    box-shadow:0 3px 12px rgba(0,0,0,0.1);
+}
+
+.input, textarea, select{
+    width:100%;
+    padding:10px;
+    border:1px solid #bcd4ff;
+    margin-bottom:12px;
+    border-radius:8px;
+}
+button{
+    background:#0057d9;
+    padding:10px 15px;
+    border:none;
+    color:white;
+    border-radius:6px;
+}
+.profileCard h3 {
+    color: #0057d9;
+    margin-top: 10px;
+}
+.profileCard p {
+    margin: 4px 0;
+    font-size: 0.95rem;
+}
+.profileCard hr {
+    border: none;
+    border-top: 1px solid #ddd;
+    margin: 14px 0;
+}

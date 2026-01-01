@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="css/managment.css">
+</head>
+
+<body>
+
+<div class="dashboard-container">
+
+    <!-- SIDE MENU -->
+    <aside class="sidebar" id="sidebar">
+        <h2>Management Panel</h2>
+        <a onclick="showHome()">🏠 Home</a>
+        <a onclick="showProfile()">👤 Profile</a>
+        <a onclick="showStudents()">🎓 All Students</a>
+        <a onclick="showAddBatch()">➕ Add Batch</a>
+        <a onclick="openChatList('trainer')">💬 Chat with Trainer</a>
+        <a onclick="openChatList('trainee')">💬 Chat with Trainee</a>
+
+
+
+
+        <a onclick="showAddRequirement()">📌 Add Requirement</a>
+        <a onclick="logout()">🚪 Logout</a>
+    </aside>
+
+    <!-- MAIN AREA (MUST be after sidebar) -->
+    <main class="main-area">
+        <div class="topbar">
+            <button id="menuBtn">☰</button>
+            
+        </div>
+        <section id="content">
+            <h2>Welcome, Management</h2>
+            <p>Select an option.</p>
+        </section>
+    </main>
+
+</div>
+
+
+<script src="file:///android_asset/js/management.js"></script>
+
+<script>
+    document.getElementById("menuBtn").addEventListener("click", () => {
+        document.getElementById("sidebar").classList.toggle("closed");
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trainer Dashboard</title>
+
+    <link rel="stylesheet" href="css/trainer.css">
+</head>
+<body>
+
+<div class="dashboard-container">
+
+    <!-- SIDE MENU -->
+    <aside id="sidebar" class="sidebar">
+        <h2>Trainer Panel</h2>
+        <a onclick="showHome()">🏠 Home</a>
+        <a onclick="showProfile()">👤 Profile</a>
+        <a onclick="showBatchChats()">💬 Batch Chat</a>
+        <a onclick="showPersonalChat()">📱 Personal Chat</a>
+        <a onclick="showAddRequirement()">📌 Add Requirement</a>
+        <a onclick="logout()">🚪 Logout</a>
+    </aside>
+
+    <!-- MAIN AREA -->
+    <main class="main-area">
+        <div class="topbar">
+            <button id="menuBtn">☰</button>
+            <h3>Trainer Dashboard</h3>
+        </div>
+
+        <section id="content">
+            <h2>Welcome Trainer</h2>
+            <p>Choose an option from the sidebar.</p>
+        </section>
+    </main>
+
+</div>
+
+<script src="file:///android_asset/js/trainer.js"></script>
+<script>
+    document.getElementById("menuBtn").addEventListener("click",()=>{
+        document.getElementById("sidebar").classList.toggle("closed");
+    });
+</script>
+
+</body>
+</html>

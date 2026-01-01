@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login | Blended Learning</title>
+    <link rel="stylesheet" href="login.css" />
+    <style>
+        .hidden {
+            display: none;
+        }
+        .reset-container {
+            text-align: center;
+        }
+        .reset-container input {
+            display: block;
+            margin: 10px auto;
+            padding: 10px;
+            width: 80%;
+        }
+        .reset-container button {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="login-container">
+    <h1>Login</h1>
+    <p class="subtitle">Select your role to continue</p>
+
+    <div class="role-selection">
+        <button class="role-btn" data-role="trainer">👨‍🏫 Trainer</button>
+        <button class="role-btn" data-role="management">🧑‍💼 Management</button>
+        <button class="role-btn" data-role="trainee">👨‍🎓 Student</button>
+    </div>
+
+    <form id="loginForm">
+        <input type="text" placeholder="Username" required />
+        <input type="password" placeholder="Password" required />
+        <button type="submit" class="login-btn">Login</button>
+        <p><a href="#" id="forgotPasswordLink">Forgot Password?</a></p>
+    </form>
+
+    <!-- Hidden Reset Password Section  // -->
+    <!--    <div id="resetContainer" class="hidden">-->
+    <!--        <h3>Reset Password</h3>-->
+    <!--        <input type="text" id="resetUsername" placeholder="Enter Username" required />-->
+    <!--        <input type="password" id="newPassword" placeholder="Enter New Password" required />-->
+    <!--        <button id="resetBtn">Update Password</button>-->
+    <!--        <p><a href="#" id="backToLogin">⬅ Back to Login</a></p>-->
+    <!--    </div>-->
+    <div id="resetContainer" class="hidden reset-container">
+        <h3>Reset Password</h3>
+
+        <!-- Step 1 -->
+        <input type="tel" id="resetMobile" placeholder="Enter Mobile Number" />
+
+        <button id="sendOtpBtn">Send OTP</button>
+
+        <!-- Step 2 -->
+        <div id="sotpSection" class="hidden">
+            <input type="text" id="otpInput" placeholder="Enter OTP" />
+            <button id="verifyOtpBtn">Verify OTP</button>
+        </div>
+
+        <!-- Step 3 -->
+        <div id="newPasswordSection" class="hidden">
+            <input type="password" id="newPassword" placeholder="Enter New Password" />
+            <button id="resetBtn">Update Password</button>
+        </div>
+
+        <p><a href="#" id="backToLogin">⬅ Back to Login</a></p>
+    </div>
+
+
+
+    <p class="back-link"><a href="index1.html">⬅ Back to Home</a></p>
+</div>
+
+<script src="login.js"></script>
+</body>
+</html> 

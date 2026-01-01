@@ -1,0 +1,229 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign Up | Blended Learning</title>
+    <link rel="stylesheet" href="signup.css" />
+    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+    <script src="https://unpkg.com/browser-image-compression@1.0.17/dist/browser-image-compression.js"></script>
+
+</head>
+<body>
+<div class="signup-container">
+    <h1>Create Account</h1>
+    <p class="subtitle">Select your role to begin registration</p>
+
+    <div class="role-selection">
+        <button class="role-btn" data-role="trainer">👨‍🏫 Trainer</button>
+        <button class="role-btn" data-role="trainee">👨‍🎓 Student</button>
+        <button class="role-btn" data-role="management">🏢 Management</button>
+    </div>
+
+    <!-- Trainer Form -->
+    <form id="trainerForm" class="hidden">
+        <h2>Trainer Registration</h2>
+
+        <h3>Personal Details</h3>
+        <input type="text" id="tFullName" placeholder="Full Name" required />
+        <label>Profile Photo:</label>
+        <input type="file" accept="image/*" id="tProfilePic" required />
+        <input type="tel" id="tMobile" placeholder="Mobile Number" required />
+        <input type="email" id="tEmail" placeholder="Email Address" required />
+
+        <label>Gender:</label>
+        <select id="tGender" required>
+            <option value="">Select Gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+        </select>
+
+        <label>Date of Birth:</label>
+        <input type="date" id="tDob" required />
+        <input type="text" id="tStreet" placeholder="Street" required />
+        <input type="text" id="tCity" placeholder="City" required />
+        <input type="text" id="tTal" placeholder="Taluka" required />
+        <input type="text" id="tDist" placeholder="District" required />
+        <input type="text" id="tState" placeholder="State" required />
+        <input type="text" id="tCountry" placeholder="Country" required />
+        <input type="text" id="tUsername" placeholder="Username" required />
+        <input type="password" id="tPassword" placeholder="Password" required />
+
+        <h3>Education Details</h3>
+        <h4>Under Graduate</h4>
+        <input type="text" id="ugDegree" placeholder="Degree (e.g., B.Tech, B.Sc)" required />
+        <input type="text" id="ugStream" placeholder="Stream (e.g., Computer Science)" required />
+        <input type="text" id="ugYOP" placeholder="Year of Passing" required />
+
+        <h4>Post Graduate</h4>
+        <input type="text" id="pgDegree" placeholder="PG Degree (e.g., M.Tech, MBA)" required />
+        <input type="text" id="pgSpec" placeholder="Specialization" required />
+        <input type="text" id="pgYOP" placeholder="Year of Passing" required />
+
+        <h3>Work Experience</h3>
+        <textarea id="tExperience" placeholder="Describe your work experience" required></textarea>
+        <label>Resume (PDF only):</label>
+        <input type="file" accept=".pdf" id="tResume" required />
+        <input type="url" id="tLinkedIn" placeholder="LinkedIn URL" />
+
+        <h3>Bank Details</h3>
+        <input type="text" id="accHolder" placeholder="Account Holder Name" required />
+        <input type="text" id="accNumber" placeholder="Account Number" required />
+        <input type="text" id="ifsc" placeholder="IFSC Code" required />
+        <input type="text" id="bankName" placeholder="Bank Name" required />
+        <input type="text" id="branchName" placeholder="Branch Name / Code" required />
+        <input type="text" id="pan" placeholder="PAN Number" required />
+        <input type="text" id="aadhar" placeholder="Aadhar Number" required />
+
+        <button type="submit">Register as Trainer</button>
+    </form>
+
+
+    <!-- Trainee Form -->
+    <form id="traineeForm" class="hidden">
+        <h2>Trainee Registration</h2>
+
+        <h3>Personal Details</h3>
+        <input type="text" id="traineeName" placeholder="Full Name" required />
+        <label for="traineePhoto">Profile Image:</label>
+        <input type="file" accept="image/*" id="traineePhoto" required />
+        <input type="tel" id="traineePhone" placeholder="Mobile Number" required />
+        <input type="email" id="traineeEmail" placeholder="Email" required />
+        <label>Gender:</label>
+        <select id="traineeGender" required>
+            <option value="">Select Gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+        </select>
+
+
+        <label for="traineeDOB">Date of Birth:</label>
+        <input type="date" id="traineeDOB" placeholder="Date of Birth" required />
+        <input type="text" id="traineeUsername" placeholder="Username" required />
+        <input type="password" id="traineePassword" placeholder="Password" required />
+
+        <h3>Address Details</h3>
+
+        <h4>Permanent Address</h4>
+        <input type="text" id="permStreet" placeholder="Street" required />
+        <input type="text" id="permCity" placeholder="City" required />
+        <input type="text" id="permTaluka" placeholder="Taluka" required />
+        <input type="text" id="permDistrict" placeholder="District" required />
+        <input type="text" id="permState" placeholder="State" required />
+        <input type="text" id="permCountry" placeholder="Country" required />
+
+
+        <h4>Temporary Address</h4>
+        <input type="text" id="tempStreet" placeholder="Street" required />
+        <input type="text" id="tempCity" placeholder="City" required />
+        <input type="text" id="tempTaluka" placeholder="Taluka" required />
+        <input type="text" id="tempDistrict" placeholder="District" required />
+        <input type="text" id="tempState" placeholder="State" required />
+        <input type="text" id="tempCountry" placeholder="Country" required />
+
+        <label>
+            <input type="checkbox" id="sameAddress" /> Same as Permanent Address
+        </label>
+
+
+        <h3>Education Details</h3>
+
+        <h4>10th Details</h4>
+        <input type="text" id="tenthPercent" placeholder="10th Percentage" required />
+        <input type="text" id="tenthYOP" placeholder="10th Year of Passing" required />
+
+        <h4>12th Details</h4>
+        <input type="text" id="twelfthPercent" placeholder="12th Percentage or NA" required />
+        <input type="text" id="twelfthYOP" placeholder="12th Year of Passing or NA" required />
+
+        <h4>Diploma Details</h4>
+        <input type="text" id="diplomaStream" placeholder="Diploma Stream or NA" required />
+        <input type="text" id="diplomaCGPA" placeholder="Diploma CGPA or NA" required />
+        <input type="text" id="diplomaYOP" placeholder="Diploma Year of Passing or NA" required />
+
+        <h4>Degree Details</h4>
+        <input type="text" id="degreeType" placeholder="Degree Type (B.Tech/B.Sc/etc.) or NA" required />
+        <input type="text" id="degreeStream" placeholder="Degree Stream or NA" required />
+        <input type="text" id="degreeCollege" placeholder="College Name or NA" required />
+        <input type="text" id="degreeYOP" placeholder="Degree Year of Passing or NA" required />
+        <input type="text" id="degreeAgg" placeholder="Aggregate % or NA" required />
+        <input type="text" id="degreeCGPA" placeholder="Degree CGPA or NA" required />
+
+        <h4>Post Graduate Details</h4>
+        <input type="text" id="pgType" placeholder="PG Type (M.Tech/MBA/etc.) or NA" required />
+        <input type="text" id="pgStream" placeholder="PG Stream or NA" required />
+        <input type="text" id="pgCollege" placeholder="PG College or NA" required />
+        <input type="text" id="pgYOP" placeholder="PG Year of Passing or NA" required />
+        <input type="text" id="pgAgg" placeholder="PG Aggregate % or NA" required />
+        <input type="text" id="pgCGPA" placeholder="PG CGPA or NA" required />
+
+        <button type="submit">Register as Trainee</button>
+    </form>
+
+
+    <!-- Management Form -->
+    <form id="managementForm" class="hidden">
+        <h2>Management Registration</h2>
+
+        <h3>Personal Details</h3>
+        <input type="text" id="mFullName" placeholder="Full Name" required />
+        <label>Profile Photo:</label>
+        <input type="file" accept="image/*" id="mProfilePic" required />
+        <input type="tel" id="mMobile" placeholder="Mobile Number" required />
+        <input type="email" id="mEmail" placeholder="Email" required />
+
+        <label>Gender:</label>
+        <select id="mGender" required>
+            <option value="">Select Gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+        </select>
+        <label>Date of Birth:</label>
+        <input type="date" id="mDob" required />
+        <input type="text" id="mStreet" placeholder="Street" required />
+        <input type="text" id="mCity" placeholder="City" required />
+        <input type="text" id="mTal" placeholder="Taluka" required />
+        <input type="text" id="mDist" placeholder="District" required />
+        <input type="text" id="mState" placeholder="State" required />
+        <input type="text" id="mCountry" placeholder="Country" required />
+
+        <h3>Login Details</h3>
+        <input type="text" id="mUsername" placeholder="Username" required />
+        <input type="password" id="mPassword" placeholder="Password" required />
+
+        <h3>Job Details</h3>
+        <input type="text" id="mJobRole" placeholder="Job Role / Position" required />
+
+        <h3>Bank Details</h3>
+        <input type="text" id="mAccHolder" placeholder="Account Holder Name" required />
+        <input type="text" id="mAccNumber" placeholder="Account Number" required />
+        <input type="text" id="mIfsc" placeholder="IFSC Code" required />
+        <input type="text" id="mBankName" placeholder="Bank Name" required />
+        <input type="text" id="mBranchName" placeholder="Branch Name / Code" required />
+        <input type="text" id="mPan" placeholder="PAN Number" required />
+        <input type="text" id="mAadhar" placeholder="Aadhar Number" required />
+
+        <button type="submit">Register as Management</button>
+    </form>
+
+
+
+    <p class="back-link"><a href="index1.html">⬅ Back to Home</a></p>
+</div>
+
+<!--&lt;!&ndash; Loading Overlay &ndash;&gt;-->
+<!--<div id="loadingOverlay" class="hidden">-->
+<!--    <div class="loader-box">-->
+<!--        <div class="spinner"></div>-->
+<!--        <p>Saving your data, please wait...</p>-->
+<!--    </div>-->
+<!--</div>-->
+
+
+
+<script src="signup.js"></script>
+</body>
+</html>

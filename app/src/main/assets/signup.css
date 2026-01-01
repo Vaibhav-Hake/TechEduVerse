@@ -1,0 +1,244 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(-45deg, #8e2de2, #4a00e0, #00bcd4, #2196f3);
+  background-size: 400% 400%;
+  animation: gradientShift 10s ease infinite;
+  color: #fff;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.signup-container {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(15px);
+  border-radius: 25px;
+  padding: 40px;
+  width: 90%;
+  max-width: 420px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+h1 {
+  margin-bottom: 10px;
+  font-size: 2.2rem;
+}
+
+.subtitle {
+  font-size: 1rem;
+  margin-bottom: 20px;
+}
+
+.role-selection {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 25px;
+}
+
+.role-btn {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.role-btn:hover,
+.role-btn.active {
+  background: #ffda79;
+  color: #333;
+  transform: scale(1.05);
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+input {
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+  font-size: 1rem;
+}
+
+button {
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  background: #fff;
+  color: #333;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+button:hover {
+  background: #333;
+  color: #fff;
+  transform: scale(1.05);
+}
+
+.hidden {
+  display: none;
+}
+
+.back-link {
+  margin-top: 15px;
+}
+
+.back-link a {
+  color: #ffda79;
+  text-decoration: none;
+  transition: 0.3s;
+}
+
+.back-link a:hover {
+  text-decoration: underline;
+}
+label {
+  display: block;
+  font-weight: 600;
+  margin-top: 10px;
+  margin-bottom: 4px;
+  color: #333;
+}
+/* ===== Profile Image and DOB Styling ===== */
+
+/* Style file input (Profile Image) */
+input[type="file"] {
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px dashed rgba(255, 255, 255, 0.4);
+  border-radius: 10px;
+  color: #fff;
+  padding: 10px;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+input[type="file"]::file-selector-button {
+  background: #ffda79;
+  color: #333;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s ease;
+  font-weight: 600;
+}
+
+input[type="file"]::file-selector-button:hover {
+  background: #fff;
+  color: #000;
+  transform: scale(1.05);
+}
+
+input[type="file"]:hover {
+  border-color: #ffda79;
+}
+
+/* Style Date of Birth input */
+input[type="date"] {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 1rem;
+  transition: 0.3s ease;
+}
+
+input[type="date"]:hover,
+input[type="date"]:focus {
+  border-color: #ffda79;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Improve label visibility over glass background */
+label {
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-align: left;
+}
+/* ===== Select / Gender Dropdown Styling ===== */
+select {
+  padding: 10px;
+  border-radius: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  outline: none;
+  font-size: 1rem;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  transition: 0.3s ease;
+  cursor: pointer;
+}
+
+select option {
+  color: #333;
+  background: #fff;
+}
+
+select:hover,
+select:focus {
+  border-color: #ffda79;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* ===== Loading Overlay ===== */
+#loadingOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.loader-box {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 30px;
+  border-radius: 20px;
+  text-align: center;
+  color: #fff;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid rgba(255,255,255,0.3);
+  border-top: 5px solid #ffda79;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 15px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

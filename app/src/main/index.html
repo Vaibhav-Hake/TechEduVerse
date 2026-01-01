@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Blended Learning App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        /* ========== RESET & BASE ========== */
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+          font-family: "Poppins", sans-serif;
+        }
+
+        body {
+          background: linear-gradient(135deg, #667eea, #764ba2);
+          color: #fff;
+          overflow-x: hidden;
+        }
+
+        /* ========== HERO SECTION ========== */
+        .hero {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          justify-content: center;
+          min-height: 100vh;
+          padding: 50px 5%;
+          text-align: center;
+          background: linear-gradient(135deg, rgba(102, 126, 234, 0.9), rgba(118, 75, 162, 0.9)),
+                      url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1350&q=80');
+          background-size: cover;
+          background-position: center;
+        }
+
+        .hero-content {
+          max-width: 600px;
+          animation: fadeIn 1.5s ease;
+        }
+
+        .hero h1 {
+          font-size: 3rem;
+          margin-bottom: 15px;
+          line-height: 1.2;
+        }
+
+        .hero p {
+          font-size: 1.2rem;
+          margin-bottom: 25px;
+          color: #f3f3f3;
+        }
+
+        .btn-group {
+          display: flex;
+          justify-content: center;
+          gap: 20px;
+          flex-wrap: wrap;
+        }
+
+        .btn {
+          background: #fff;
+          color: #333;
+          border: none;
+          padding: 12px 30px;
+          border-radius: 30px;
+          font-size: 1rem;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+          background: #333;
+          color: #fff;
+          transform: scale(1.05);
+        }
+
+        @keyframes fadeIn {
+          from {opacity: 0; transform: translateY(20px);}
+          to {opacity: 1; transform: translateY(0);}
+        }
+
+        /* ========== SECTIONS ========== */
+        .section {
+          padding: 80px 10%;
+          text-align: center;
+          background: rgba(255, 255, 255, 0.05);
+          backdrop-filter: blur(8px);
+        }
+
+        .section h2 {
+          font-size: 2rem;
+          margin-bottom: 20px;
+          border-left: 6px solid #fff;
+          display: inline-block;
+          padding-left: 10px;
+        }
+
+        .section p {
+          color: #f0f0f0;
+          font-size: 1rem;
+          max-width: 700px;
+          margin: 0 auto;
+          line-height: 1.6;
+        }
+
+        .section img {
+          width: 100%;
+          max-width: 700px;
+          border-radius: 20px;
+          margin-top: 30px;
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+          transition: 0.4s;
+        }
+
+        .section img:hover {
+          transform: scale(1.03);
+        }
+
+        .stats {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 40px;
+          margin-top: 40px;
+        }
+
+        .stat-box {
+          background: rgba(255, 255, 255, 0.15);
+          border-radius: 15px;
+          padding: 25px 40px;
+          text-align: center;
+          transition: 0.3s;
+        }
+
+        .stat-box:hover {
+          background: rgba(255, 255, 255, 0.25);
+          transform: scale(1.05);
+        }
+
+        .stat-box h3 {
+          font-size: 2rem;
+          color: #fff;
+        }
+
+        .stat-box p {
+          color: #ddd;
+          margin-top: 5px;
+        }
+
+        .recruiters {
+          background: rgba(255, 255, 255, 0.08);
+          padding: 80px 10%;
+          text-align: center;
+        }
+
+        .recruiters h2 {
+          margin-bottom: 30px;
+        }
+
+        .logo-grid {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 30px;
+        }
+
+        .logo-grid img {
+          width: 120px;
+          height: auto;
+          filter: brightness(0) invert(1);
+          opacity: 0.8;
+          transition: 0.3s;
+        }
+
+        .logo-grid img:hover {
+          opacity: 1;
+          transform: scale(1.1);
+        }
+
+        footer {
+          background: rgba(0, 0, 0, 0.3);
+          padding: 20px;
+          text-align: center;
+          font-size: 0.9rem;
+          color: #e5e5e5;
+        }
+
+        /* ========== MODALS ========== */
+        .modal {
+          position: fixed;
+          top: 0; left: 0;
+          width: 100%; height: 100%;
+          background: rgba(0,0,0,0.7);
+          display: none;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+        }
+
+        .modal.active {
+          display: flex;
+        }
+
+        .modal-content {
+          background: #fff;
+          color: #333;
+          border-radius: 15px;
+          padding: 30px 40px;
+          width: 90%;
+          max-width: 400px;
+          text-align: center;
+          position: relative;
+          animation: slideIn 0.4s ease;
+        }
+
+        @keyframes slideIn {
+          from {transform: translateY(-30px); opacity: 0;}
+          to {transform: translateY(0); opacity: 1;}
+        }
+
+        .modal-content h2 {
+          margin-bottom: 20px;
+        }
+
+        .modal-content input {
+          width: 100%;
+          padding: 12px;
+          margin: 10px 0;
+          border-radius: 8px;
+          border: 1px solid #ccc;
+          font-size: 1rem;
+        }
+
+        .modal-content button {
+          width: 100%;
+          padding: 12px;
+          border: none;
+          border-radius: 8px;
+          background: #667eea;
+          color: #fff;
+          font-size: 1rem;
+          margin-top: 10px;
+          cursor: pointer;
+          transition: 0.3s;
+        }
+
+        .modal-content button:hover {
+          background: #764ba2;
+        }
+
+        .close-btn {
+          position: absolute;
+          top: 10px;
+          right: 15px;
+          font-size: 1.4rem;
+          cursor: pointer;
+          color: #555;
+        }
+
+        @media (max-width: 768px) {
+          .hero h1 {
+            font-size: 2.2rem;
+          }
+        }
+    </style>
+</head>
+<body>
+
+<!-- HERO -->
+<section class="hero">
+    <div class="hero-content">
+        <h1>Welcome to Blended Learning</h1>
+        <p>Empowering future-ready students with modern education — both online & offline.</p>
+        <div class="btn-group">
+            <button class="btn" id="loginBtn">Login</button>
+            <button class="btn" id="signupBtn">Sign Up</button>
+        </div>
+    </div>
+</section>
+
+<!-- ABOUT -->
+<section class="section">
+    <h2>About Our Institute</h2>
+    <p>
+        Our institute stands at the forefront of innovation in education.
+        We provide flexible, blended learning programs that merge traditional classroom teaching
+        with cutting-edge online platforms, helping students gain both knowledge and real-world experience.
+    </p>
+    <img src="https://images.unsplash.com/photo-1606761568499-6d2451b23c39?auto=format&fit=crop&w=800&q=80" alt="Institute Image">
+</section>
+
+<!-- PLACEMENT -->
+<section class="section">
+    <h2>Placement Highlights</h2>
+    <p>
+        Our dedicated placement cell ensures that every learner finds their dream job.
+        Regular training, interview sessions, and mentorship have resulted in excellent placement rates.
+    </p>
+    <div class="stats">
+        <div class="stat-box">
+            <h3>95%</h3>
+            <p>Placement Rate</p>
+        </div>
+        <div class="stat-box">
+            <h3>₹6.5 LPA</h3>
+            <p>Average Package</p>
+        </div>
+        <div class="stat-box">
+            <h3>200+</h3>
+            <p>Recruiters</p>
+        </div>
+    </div>
+</section>
+
+<!-- RECRUITERS -->
+<section class="recruiters">
+    <h2>Our Top Recruiters</h2>
+    <div class="logo-grid">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/4/4a/Logo_2013_Google.png" alt="Google">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg" alt="Amazon">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/0/05/Infosys_logo.svg" alt="Infosys">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/d/d5/TCS_Logo.svg" alt="TCS">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/3/3e/Wipro_Primary_Logo_Color_RGB.svg" alt="Wipro">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/5/58/Accenture.svg" alt="Accenture">
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer>© 2025 Blended Learning | Empowering Education</footer>
+
+<!-- LOGIN MODAL -->
+<div class="modal" id="loginModal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeModal('loginModal')">&times;</span>
+        <h2>Login</h2>
+        <input type="email" id="loginEmail" placeholder="Email" required />
+        <input type="password" id="loginPassword" placeholder="Password" required />
+        <button onclick="handleLogin()">Login</button>
+    </div>
+</div>
+
+<!-- SIGNUP MODAL -->
+<div class="modal" id="signupModal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeModal('signupModal')">&times;</span>
+        <h2>Sign Up</h2>
+        <input type="text" id="signupName" placeholder="Full Name" required />
+        <input type="email" id="signupEmail" placeholder="Email" required />
+        <input type="password" id="signupPassword" placeholder="Password" required />
+        <button onclick="handleSignup()">Create Account</button>
+    </div>
+</div>
+
+<script>
+    // OPEN & CLOSE MODALS
+    document.getElementById("loginBtn").addEventListener("click", () => {
+      document.getElementById("loginModal").classList.add("active");
+    });
+
+    document.getElementById("signupBtn").addEventListener("click", () => {
+      document.getElementById("signupModal").classList.add("active");
+    });
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove("active");
+    }
+
+    // SIMPLE VALIDATION
+    function handleLogin() {
+      const email = document.getElementById("loginEmail").value;
+      const pass = document.getElementById("loginPassword").value;
+      if (!email || !pass) {
+        alert("Please fill in all fields!");
+        return;
+      }
+      alert("Login successful! (Demo)");
+      closeModal("loginModal");
+    }
+
+    function handleSignup() {
+      const name = document.getElementById("signupName").value;
+      const email = document.getElementById("signupEmail").value;
+      const pass = document.getElementById("signupPassword").value;
+      if (!name || !email || !pass) {
+        alert("Please fill in all fields!");
+        return;
+      }
+      alert("Signup successful! (Demo)");
+      closeModal("signupModal");
+    }
+
+    // Close modal if clicked outside
+    window.onclick = function (event) {
+      if (event.target.classList.contains("modal")) {
+        event.target.classList.remove("active");
+      }
+    };
+</script>
+</body>
+</html>

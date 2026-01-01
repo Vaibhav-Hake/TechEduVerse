@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Trainee Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="css/dashbord.css">
+    <link rel="stylesheet" href="css/profile.css">
+</head>
+
+<body class="trainee">
+<div class="app-wrapper">
+
+    <header class="top-header">
+        <div class="page-title">Trainee Dashboard</div>
+        <div class="header-actions">
+            <span class="notif-icon">🔔</span>
+            <span class="user-icon">👤</span>
+        </div>
+    </header>
+
+    <nav class="sidebar" id="sidebar">
+        <button id="sidebarToggle" class="sidebar-toggle">☰</button>
+        <ul class="menu">
+            <li onclick="showHome()" class="active"><span class="icon">🏠</span><span class="text">Home</span></li>
+            <li onclick="showProfile()"><span class="icon">👤</span><span class="text">Profile</span></li>
+            <li onclick="showBatches()"><span class="icon">📚</span><span class="text">Batches</span></li>
+            <li onclick="showMessages()"><span class="icon">💬</span><span class="text">Messages</span></li>
+            <li onclick="showRequirements()"><span class="icon">🧾</span><span class="text">Requirements</span></li>
+            <li onclick="showResume()"><span class="icon">📄</span><span class="text">Resume</span></li>
+            <li onclick="logout()"><span class="icon">🚪</span><span class="text">Logout</span></li>
+        </ul>
+    </nav>
+
+    <main class="content-area" id="content"></main>
+
+</div>
+
+
+
+
+<script src="js/trainee.js"></script>
+</body>
+</html>
