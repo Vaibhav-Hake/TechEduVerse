@@ -67,12 +67,6 @@ public class MainActivity extends AppCompatActivity {
 
     public class AndroidBridge {
         @JavascriptInterface
-        public void updateCurrentView(String view){
-            currentView = view;
-            Log.d("WEB_VIEW", "Current View = " + view);
-        }
-
-        @JavascriptInterface
         public void getTrainerAssignedBatches(String trainerId){
             DatabaseReference ref = FirebaseDatabase.getInstance()
                     .getReference("trainerAssigned")
@@ -768,7 +762,7 @@ public class MainActivity extends AppCompatActivity {
                             webView.loadUrl(pageUrl);
                         }
 
-                    else {
+                        else {
                             Toast.makeText(MainActivity.this, "Invalid username or password.", Toast.LENGTH_SHORT).show();
                             webView.evaluateJavascript("onLoginFailed();", null);
                         }
@@ -1034,45 +1028,17 @@ public class MainActivity extends AppCompatActivity {
         webView.addJavascriptInterface(new AndroidBridge(), "AndroidBridge");
         webView.loadUrl("file:///android_asset/index1.html");
 
-        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
-            @Override
-            public void handleOnBackPressed() {
-
-                // 🔹 User logged in
-                if (!currentUserId.isEmpty()) {
-
-                    // 🔹 Not on Home → go Home
-                    if (!"home".equals(currentView)) {
-                        webView.evaluateJavascript("showHome();", null);
-                        return;
-                    }
-
-                    // 🔹 On Home → Ask Exit
-                    new android.app.AlertDialog.Builder(MainActivity.this)
-                            .setTitle("Exit App")
-                            .setMessage("Do you want to exit?")
-                            .setPositiveButton("Yes", (d, w) -> finish())
-                            .setNegativeButton("No", null)
-                            .show();
-                }
-                else {
-                    // 🔹 Not logged in
-                    if (webView.canGoBack()) {
-                        webView.goBack();
-                    } else {
-                        finish();
-                    }
-                }
-            }
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true)
+        { @Override
+        public void handleOnBackPressed()
+        {
+            if (webView.canGoBack()) webView.goBack();
+            else finish(); }
         });
 
 
 
-
     }
-    // 🔹 Track current view from JS
-    private String currentView = "home";
-
 
     // -------------------- FILE UPLOAD --------------------
     @Override
