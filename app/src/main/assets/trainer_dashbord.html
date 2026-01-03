@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trainer Dashboard</title>
-
     <link rel="stylesheet" href="css/trainer.css">
 </head>
 <body>
@@ -16,7 +15,7 @@
         <h2>Trainer Panel</h2>
         <a onclick="showHome()">🏠 Home</a>
         <a onclick="showProfile()">👤 Profile</a>
-        <a onclick="showBatchChats()">💬 Batch Chat</a>
+        <a onclick="showHome()">💬 Batch Chat</a> <!-- FIXED -->
         <a onclick="showPersonalChat()">📱 Personal Chat</a>
         <a onclick="showAddRequirement()">📌 Add Requirement</a>
         <a onclick="logout()">🚪 Logout</a>
@@ -38,11 +37,6 @@
 </div>
 
 <script src="file:///android_asset/js/trainer.js"></script>
-<script>
-    document.getElementById("menuBtn").addEventListener("click",()=>{
-        document.getElementById("sidebar").classList.toggle("closed");
-    });
-</script>
 
 </body>
 </html>

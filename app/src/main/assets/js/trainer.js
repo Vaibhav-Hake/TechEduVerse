@@ -5,266 +5,280 @@ let chatPartner = "";
 
 /* ========= 🏠 HOME ========= */
 function showHome(){
+  currentView = "home";
   document.getElementById("content").innerHTML = "<h3>Loading...</h3>";
   AndroidBridge.getAssignedBatches();
 }
 
-
 function showAssignedBatches(data){
-    const list = JSON.parse(data || "{}");
-    let html = `<h2>📌 Assigned Batches</h2>`;
+  const list = JSON.parse(data || "{}");
+  let html = `<h2>📌 Assigned Batches</h2>`;
 
-    Object.keys(list).length === 0 ?
-        html += `<p>No batches assigned yet.</p>` :
-        Object.keys(list).forEach(bid=>{
-            let b = list[bid];
-            html += `
-                <div class="card">
-                    <h3>${b.batchName}</h3>
-                    <p><b>ID:</b> ${bid}</p>
-                    <p>📚 ${b.subject}</p>
-                    <p>⏱ ${b.time}</p>
-                    <button onclick="openGroupChat('${bid}')">💬 Open Batch Chat</button>
-                </div>
-            `;
-        });
+  if(Object.keys(list).length === 0){
+    html += `<p>No batches assigned yet.</p>`;
+  } else {
+    Object.keys(list).forEach(bid=>{
+      let b = list[bid];
+      html += `
+        <div class="card">
+          <h3>${b.batchName}</h3>
+          <p><b>ID:</b> ${bid}</p>
+          <p>📚 ${b.subject}</p>
+          <p>⏱ ${b.time}</p>
+          <button onclick="openGroupChat('${bid}')">💬 Open Batch Chat</button>
+        </div>
+      `;
+    });
+  }
 
-    document.getElementById("content").innerHTML = html;
+  document.getElementById("content").innerHTML = html;
 }
+
 
 /* ========= 👤 PROFILE ========= */
 function showProfile() {
-    currentView = "profile";
-    document.getElementById("content").innerHTML = `<p>Loading profile...</p>`;
-    AndroidBridge.getUserProfile("trainer");
+  currentView = "profile";
+  document.getElementById("content").innerHTML = `<p>Loading profile...</p>`;
+  AndroidBridge.getUserProfile("trainer");
 }
 
 function showProfileDetails(data) {
-    if(currentView !== "profile") return;
+  if(currentView !== "profile") return;
+  try {
+    const user = typeof data === "string" ? JSON.parse(data) : data;
 
-    try {
-        const user = typeof data === "string" ? JSON.parse(data) : data;
+    const pic = user.tProfilePic_Base64
+      ? `data:image/png;base64,${user.tProfilePic_Base64}`
+      : "default-avatar.png";
 
-        const profilePic = user.tProfilePic_Base64
-            ? `data:image/png;base64,${user.tProfilePic_Base64}`
-            : "default-avatar.png";
+    document.getElementById("content").innerHTML = `
+      <div class="card profileCard">
+        <div style="text-align:center;">
+          <img src="${pic}" style="width:120px;height:120px;border-radius:50%;border:2px solid #0057d9;">
+          <h2>👤 ${user.tFullName || 'N/A'}</h2>
+        </div>
 
-        document.getElementById("content").innerHTML = `
-            <div class="card profileCard">
-                <div style="text-align:center;">
-                    <img src="${profilePic}" style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:2px solid #0057d9;">
-                    <h2>👤 ${user.tFullName || 'N/A'}</h2>
-                </div>
+        <hr><h3>📌 Basic Info</h3>
+        <p><b>Email:</b> ${user.tEmail || 'N/A'}</p>
+        <p><b>Mobile:</b> ${user.tMobile || 'N/A'}</p>
+        <p><b>DOB:</b> ${user.tDob || 'N/A'}</p>
+        <p><b>Gender:</b> ${user.tGender || 'N/A'}</p>
+        <p><b>Address:</b> ${user.tStreet || ''}, ${user.tCity || ''}, ${user.tState || ''}</p>
 
-                <hr>
-                <h3>📌 Basic Information</h3>
-                <p><b>Username:</b> ${user.tUsername || 'N/A'}</p>
-                <p><b>Email:</b> ${user.tEmail || 'N/A'}</p>
-                <p><b>Mobile:</b> ${user.tMobile || 'N/A'}</p>
-                <p><b>DOB:</b> ${user.tDob || 'N/A'}</p>
-                <p><b>Gender:</b> ${user.tGender || 'N/A'}</p>
-                <p><b>Address:</b> ${user.tStreet || ''}, ${user.tCity || ''}, ${user.tState || ''}</p>
+        <hr><h3>🎓 Education</h3>
+        <p><b>UG:</b> ${user.ugDegree || 'N/A'} (${user.ugStream || ''})</p>
+        <p><b>PG:</b> ${user.pgDegree || 'N/A'} (${user.pgSpec || ''})</p>
 
-                <hr>
-                <h3>🎓 Education</h3>
-                <p><b>UG:</b> ${user.ugDegree || 'N/A'} - ${user.ugStream || ''} (${user.ugYOP || ''})</p>
-                <p><b>PG:</b> ${user.pgDegree || 'N/A'} - ${user.pgSpec || ''} (${user.pgYOP || ''})</p>
+        <hr><h3>💼 Work Details</h3>
+        <p><b>Experience:</b> ${user.tExperience || 'N/A'}</p>
+        <p><b>LinkedIn:</b> <a href="${user.tLinkedIn || '#'}" target="_blank">${user.tLinkedIn || 'N/A'}</a></p>
 
-                <hr>
-                <h3>💼 Work Details</h3>
-                <p><b>Experience:</b> ${user.tExperience || 'N/A'}</p>
-                <p><b>LinkedIn:</b> <a href="${user.tLinkedIn || '#'}" target="_blank">${user.tLinkedIn || 'N/A'}</a></p>
-
-                <hr>
-                <h3>🏦 Bank Details</h3>
-                <p><b>Account Holder:</b> ${user.accHolder || 'N/A'}</p>
-                <p><b>Account Number:</b> ${user.accNumber || 'N/A'}</p>
-                <p><b>IFSC:</b> ${user.ifsc || 'N/A'}</p>
-                <p><b>Bank:</b> ${user.bankName || 'N/A'} (${user.branchName || 'N/A'})</p>
-                <p><b>PAN:</b> ${user.pan || 'N/A'}</p>
-                <p><b>Aadhar:</b> ${user.aadhar || 'N/A'}</p>
-            </div>
-        `;
-    }
-    catch(e){
-        console.error("Profile Parse Error:", e);
-        alert("❌ Failed to load trainer profile");
-    }
+        <hr><h3>🏦 Bank Details</h3>
+        <p><b>Account No:</b> ${user.accNumber || 'N/A'}</p>
+        <p><b>IFSC:</b> ${user.ifsc || 'N/A'}</p>
+        <p><b>Bank:</b> ${user.bankName || ''} ${user.branchName || ''}</p>
+        <p><b>PAN:</b> ${user.pan || 'N/A'}</p>
+        <p><b>Aadhar:</b> ${user.aadhar || 'N/A'}</p>
+      </div>
+    `;
+  } catch(err){
+    alert("❌ Profile Load Error");
+    console.log(err);
+  }
 }
 
 
 /* ========= 💬 GROUP CHAT ========= */
 function openGroupChat(batchId){
-    if(!batchId){ alert("❌ Invalid Batch ID"); return; }
-    currentBatch = batchId;
+  if(!batchId){ return alert("❌ Invalid Batch ID"); }
 
-    if(AndroidBridge.getGroupMessages){
-        AndroidBridge.getGroupMessages(batchId);
-    }
+  currentView = "groupChat";
+  currentBatch = batchId;
 
-    document.getElementById("content").innerHTML = `
-        <h2>📢 Group Chat - ${batchId}</h2>
-        <div id="chatBox" style="height:300px;overflow:auto;background:white;padding:10px;margin-bottom:10px;border-radius:8px;"></div>
-        <input id="msgInput" placeholder="Type message...">
-        <button onclick="sendGroupMsg()">Send</button>
-    `;
+  if(AndroidBridge.getGroupMessages){
+      AndroidBridge.getGroupMessages(batchId);
+  } else if(AndroidBridge.getBatchMessages){
+      AndroidBridge.getBatchMessages(batchId); // fallback
+  } else {
+      return alert("❌ No chat API found in Android");
+  }
+
+  document.getElementById("content").innerHTML = `
+    <h2>📢 Group Chat - ${batchId}</h2>
+    <div id="chatBox" class="chatArea" style="height:300px;overflow:auto;padding:10px;background:white;"></div>
+    <input id="msgInput" placeholder="Type message...">
+    <button onclick="sendGroupMsg()">Send</button>
+  `;
 }
+
 
 function loadGroupMessages(data){
-    const msgs = JSON.parse(data || "{}");
-    let box = document.getElementById("chatBox");
-    box.innerHTML = "";
+  const msgs = JSON.parse(data || "{}");
+  let box = document.getElementById("chatBox");
+  box.innerHTML = "";
 
-    Object.keys(msgs).forEach(k=>{
-        let m = msgs[k];
-        box.innerHTML += `<p><b>${m.from}:</b> ${m.text}</p>`;
-    });
+  Object.keys(msgs).forEach(k=>{
+    let m = msgs[k];
+    box.innerHTML += `<p><b>${m.from}:</b> ${m.text}</p>`;
+  });
 
-    box.scrollTop = box.scrollHeight;
+  box.scrollTop = box.scrollHeight;
 }
-
 function sendGroupMsg(){
-    const text = document.getElementById("msgInput").value.trim();
-    if(!text) return;
-    AndroidBridge.sendGroupMessage(currentBatch, text, "trainer");
-    AndroidBridge.getGroupMessages(currentBatch);
-    document.getElementById("msgInput").value = "";
+   let text = document.getElementById("msgInput").value;
+   if(text.trim() == "") return;
+
+   AndroidBridge.sendGroupMessage(currentBatch, text, "trainer");
+   AndroidBridge.getGroupMessages(currentBatch);
 }
+
+
 
 /* ========= 👥 PERSONAL CHAT ========= */
 function showPersonalChat(){
-    currentView = "personalChat";
-    document.getElementById("content").innerHTML = `
-        <h2>📱 Personal Chat</h2>
-        <button onclick="loadManagement()">Chat with Management</button> <br><br>
-        <button onclick="loadStudents()">Chat with Students</button>
-    `;
+  currentView = "personalChatMain";
+  document.getElementById("content").innerHTML = `
+    <h2>📱 Personal Chat</h2>
+
+    <button onclick="loadManagement()">Chat with Management</button>
+    <br><br>
+    <button onclick="loadStudents()">Chat with Students</button>
+  `;
 }
+
 function loadManagement(){
-    currentView = "personalChat";
-    if(AndroidBridge.getManagementUsers){
-        AndroidBridge.getManagementUsers();        // preferred if exists
-    }
-    else if(AndroidBridge.getAllTrainersForChat){
-        AndroidBridge.getAllTrainersForChat();     // fallback
-    }
+  currentView = "personalChat";
+
+  if(AndroidBridge.getManagementUsers){
+      AndroidBridge.getManagementUsers();
+  } else if(AndroidBridge.getAllTrainersForChat){
+      AndroidBridge.getAllTrainersForChat();
+  } else {
+      alert("❌ No Management API found in Android");
+  }
 }
 
 
+// MANAGEMENT/TRAINERS LIST
 function loadTrainerList(data){
-    const trainers = JSON.parse(data || "{}");
-    let html = `<h3>👨‍💼 Management / Trainers</h3>`;
-    Object.keys(trainers).forEach(id=>{
-        html += `<div class="card" onclick="startChat('${id}')">💠 ${trainers[id].tFullName}</div>`;
-    });
-    document.getElementById("content").innerHTML = html;
+  const trainers = JSON.parse(data || "{}");
+  let html = `<h3>👨‍💼 Management / Trainers</h3>`;
+
+  Object.keys(trainers).forEach(id=>{
+    const name = trainers[id].mFullName || trainers[id].tFullName || "Unknown";
+    html += `<div class="card" onclick="startChat('${id}')">${name}</div>`;
+  });
+
+  document.getElementById("content").innerHTML = html;
+  if(typeof AndroidBridge !== "undefined"){
+    AndroidBridge.loadTrainerList = loadTrainerList; // ensure mapping
+    AndroidBridge.displayStudents = displayStudents; // ensure mapping
+  }
+
 }
 
+// STUDENTS LIST
 function loadStudents(){
-    if(AndroidBridge.getAllStudents){
-        AndroidBridge.getAllStudents();
-    }
+  currentView = "personalChat";
+  AndroidBridge.getAllStudents();
 }
 
+/* ========= SINGLE FUNCTION FOR STUDENT DATA ========= */
 function displayStudents(data){
-    const list = JSON.parse(data || "{}");
+  const list = JSON.parse(data || "{}");
+
+  if(currentView === "personalChat"){
     let html = `<h3>🎓 Students</h3>`;
     Object.keys(list).forEach(id=>{
-        html += `<div class="card" onclick="startChat('${id}')">👤 ${list[id].traineeName}</div>`;
+      html += `<div class="card" onclick="startChat('${id}')">${list[id].traineeFullName}</div>`;
     });
-    document.getElementById("content").innerHTML = html;
+    return document.getElementById("content").innerHTML = html;
+  }
+
+  if(currentView === "req"){
+    let dd = document.getElementById("stuList");
+    dd.innerHTML = "";
+    Object.keys(list).forEach(id=>{
+      dd.innerHTML += `<option value="${id}">${list[id].traineeFullName}</option>`;
+    });
+  }
 }
 
-/* ====== START CHAT ====== */
+
+/* ========= CHAT WINDOW ========= */
 function startChat(id){
-    if(!id){ alert("⚠️ Error: Invalid User"); return; }
-    chatPartner = id;
+  if(!id){ return alert("⚠️ Invalid User"); }
 
-    if(AndroidBridge.getChatHistory){
-        AndroidBridge.getChatHistory(id);
-    }
+  chatPartner = id;
+  currentView = "chat";
 
-    document.getElementById("content").innerHTML = `
-        <h3>💬 Chat</h3>
-        <div id="chatWindow" style="height:300px;overflow:auto;background:white;border-radius:10px;padding:10px;"></div>
-        <input id="pmsg" placeholder="Message...">
-        <button onclick="sendPmsg()">Send</button>
-    `;
+  if(AndroidBridge.getChatHistory){
+      AndroidBridge.getChatHistory(id);
+  } else {
+      return alert("❌ Chat History API Missing");
+  }
+
+  document.getElementById("content").innerHTML = `
+      <h2>💬 Chat with ${id}</h2>
+      <div id="chatWindow" style="height:300px;overflow:auto;background:white;padding:10px;border-radius:10px;"></div>
+      <input id="pmsg">
+      <button onclick="sendPmsg()">Send</button>
+  `;
 }
+
 
 function showChatMessages(data){
-    const msgs = JSON.parse(data || "{}");
-    let box = document.getElementById("chatWindow");
-    box.innerHTML = "";
+  const msgs = JSON.parse(data || "{}");
+  let box = document.getElementById("chatWindow");
+  box.innerHTML = "";
 
-    Object.keys(msgs).forEach(k=>{
-        let m = msgs[k];
-        box.innerHTML += `<p><b>${m.from}:</b> ${m.text}</p>`;
-    });
+  Object.keys(msgs).forEach(k=>{
+    let m = msgs[k];
+    box.innerHTML += `<p><b>${m.from}:</b> ${m.text}</p>`;
+  });
 
-    box.scrollTop = box.scrollHeight;
+  box.scrollTop = box.scrollHeight;
 }
 
 function sendPmsg(){
-    let text = document.getElementById("pmsg").value.trim();
-    if(!text) return;
-    AndroidBridge.sendPersonalMessage(chatPartner, text, "trainer");
-    AndroidBridge.getChatHistory(chatPartner);
-    document.getElementById("pmsg").value = "";
+  let msg = document.getElementById("pmsg").value.trim();
+  if(!msg) return;
+  AndroidBridge.sendPersonalMessage(chatPartner, msg, "trainer");
+  AndroidBridge.getChatHistory(chatPartner);
+  document.getElementById("pmsg").value = "";
 }
+
 
 /* ========= 📌 REQUIREMENT ========= */
 function showAddRequirement(){
-  currentView="req";
+  currentView = "req";
   AndroidBridge.getAllStudents();
   document.getElementById("content").innerHTML = `
     <h3>📌 Send Requirement</h3>
     <select id="stuList"></select>
     <textarea id="reqText"></textarea>
-    <button onclick="sendReq()">Send</button>`;
+    <button onclick="sendReq()">Send</button>
+  `;
 }
-/* ========= STUDENT LIST FOR PERSONAL CHAT ========= */
-function displayStudents(data){
-    if(currentView === "personalChat"){
-        const list = JSON.parse(data || "{}");
-        let html = `<h3>🎓 Students</h3>`;
-        Object.keys(list).forEach(id=>{
-            html += `<div class="card" onclick="startChat('${id}')">👤 ${list[id].traineeFullName}</div>`;
-        });
-        document.getElementById("content").innerHTML = html;
-        return;
-    }
-
-    /* ========= STUDENT LIST FOR REQUIREMENT ========= */
-    if(currentView === "req"){
-        const list = JSON.parse(data || "{}");
-        let dropdown = document.getElementById("stuList");
-        dropdown.innerHTML = "";
-        Object.keys(list).forEach(id=>{
-            dropdown.innerHTML += `<option value="${id}">${list[id].traineeFullName}</option>`;
-        });
-        return;
-    }
-}
-
-
 
 function sendReq(){
-    const id = document.getElementById("stuList").value;
-    const text = document.getElementById("reqText").value;
-    if(!text) return alert("⚠️ Enter text!");
-    AndroidBridge.addRequirement(id, text, "trainer");
-    alert("✔️ Requirement Sent");
+  const id = document.getElementById("stuList").value;
+  const text = document.getElementById("reqText").value;
+  if(!text){ return alert("⚠️ Enter requirement!"); }
+  AndroidBridge.addRequirement(id, text, "trainer");
+  alert("✔️ Requirement Sent");
 }
+
 
 /* ========= 🚪 LOGOUT ========= */
 function logout(){ location.href = "index1.html"; }
 
-/* ========= ✔️ AUTO SIDEBAR TOGGLE ========= */
+
+/* ========= SIDEBAR TOGGLE ========= */
 document.addEventListener("DOMContentLoaded", () => {
-    const btn = document.getElementById("menuBtn");
-    const sidebar = document.querySelector(".sidebar");
-    if(btn && sidebar){
-        btn.addEventListener("click",()=> sidebar.classList.toggle("closed"));
-    }
+  const btn = document.getElementById("menuBtn");
+  const sidebar = document.querySelector(".sidebar");
+  if(btn && sidebar){
+    btn.addEventListener("click",()=> sidebar.classList.toggle("closed"));
+  }
 });

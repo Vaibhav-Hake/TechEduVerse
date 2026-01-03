@@ -96,3 +96,19 @@ button{
     border-top: 1px solid #ddd;
     margin: 14px 0;
 }
+/* ----- 🔗 Fix LinkedIn Link Break Issue ----- */
+.profileCard a {
+    display: inline-block;
+    max-width: 100%;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+    line-height: 1.4;
+    color: #004aad;
+    text-decoration: underline;
+}
+
+/* Optional hover effect */
+.profileCard a:hover {
+    color: #002c6e;
+}

@@ -4,9 +4,16 @@ let currentChatUser = null;
 let currentChatRole = null;
 let currentGroup = null;
 
+/* ===== BACK BUTTON SUPPORT ===== */
+function getCurrentView(){
+    return currentView || "home";
+}
+
 /* ================= HOME ================= */
 function showHome(){
     currentView = "home";
+    AndroidBridge.updateCurrentView("home");
+
     document.getElementById("content").innerHTML = "<h3>Loading Batches...</h3>";
 
     if(AndroidBridge.getAllBatches){
@@ -45,6 +52,8 @@ function removeBatch(id){
 /* ================= PROFILE ================= */
 function showProfile(){
     currentView = "profile";
+    AndroidBridge.updateCurrentView("profile");
+
     document.getElementById("content").innerHTML = `<p>Loading Profile...</p>`;
     AndroidBridge.getUserProfile("management");
 }
@@ -65,6 +74,7 @@ function showProfileDetails(data){
 /* ================= ADD BATCH ================= */
 function showAddBatch(){
     currentView = "addBatch";
+    AndroidBridge.updateCurrentView("addBatch");
 
     document.getElementById("content").innerHTML = `
         <div class="card">
@@ -118,8 +128,45 @@ function saveBatch(){
     showHome();
 }
 
-/* ================= STUDENTS DISPLAY ================= */
+/* ================= TRAINERS ================= */
+function showTrainers(){
+    currentView = "trainers";
+    AndroidBridge.updateCurrentView("trainers");
+
+    document.getElementById("content").innerHTML = `<h3>Loading Trainers...</h3>`;
+    AndroidBridge.getAllTrainersForManagement();
+}
+
+function displayTrainerCards(data){
+    const trainers = JSON.parse(data);
+    let html = `<h2>👨‍🏫 All Trainers</h2>`;
+
+    Object.keys(trainers).forEach(id=>{
+        const t = trainers[id];
+        html += `
+        <div class="card">
+            <h3>${t.tFullName || 'N/A'}</h3>
+            <p>${t.tEmail || 'N/A'}</p>
+            <button onclick="viewTrainer('${id}')">👁 View Profile</button>
+        </div>`;
+    });
+
+    content.innerHTML = html;
+}
+
+function viewTrainer(id){
+    currentView = "trainerProfile";
+    AndroidBridge.updateCurrentView("trainerProfile");
+
+    AndroidBridge.getSpecificTrainer(id);
+    AndroidBridge.getTrainerAssignedBatches(id);
+}
+
+/* ================= STUDENTS ================= */
 function showStudents(){
+    currentView = "students";
+    AndroidBridge.updateCurrentView("students");
+
     document.getElementById("content").innerHTML = `<h3>Loading Students...</h3>`;
     AndroidBridge.getAllStudents();
 }
@@ -127,11 +174,16 @@ function showStudents(){
 function displayStudents(data){
     const list = JSON.parse(data);
 
-    if(document.getElementById("reqStudent")) {
+    if(document.getElementById("reqStudent")){
         let dd = document.getElementById("reqStudent");
         dd.innerHTML = `<option value="">Select Student</option>`;
         Object.keys(list).forEach(id=>{
-            dd.innerHTML += `<option value="${id}">${list[id].traineeFullName}</option>`;
+            const name =
+                list[id].traineeFullName ||
+                list[id].traineeName ||
+                "Unknown Student";
+
+            dd.innerHTML += `<option value="${id}">${name}</option>`;
         });
         return;
     }
@@ -151,154 +203,75 @@ function displayStudents(data){
 }
 
 function viewStudent(id){
-    AndroidBridge.getSpecificStudent(id);
-}
+    currentView = "studentProfile";
+    AndroidBridge.updateCurrentView("studentProfile");
 
-function displaySingleStudent(data){
-    const s = JSON.parse(data);
-    document.getElementById("content").innerHTML = `
-        <div class="profile-container">
-            <h3>${s.traineeFullName}</h3>
-            <p>${s.traineeEmail}</p>
-            <p>${s.traineePhone}</p>
-        </div>
-    `;
+    AndroidBridge.getSpecificStudent(id);
 }
 
 /* ================= ADD REQUIREMENT ================= */
 function showAddRequirement(){
-    document.getElementById("content").innerHTML = `
-        <div class="card">
-            <h3>📌 Add Requirement</h3>
-            <select id="reqStudent"></select>
-            <textarea id="reqText"></textarea>
-            <button onclick="submitRequirement()">Submit</button>
-        </div>`;
+    currentView = "addRequirement";
+    AndroidBridge.updateCurrentView("addRequirement");
 
-    AndroidBridge.getAllStudents();
+    document.getElementById("content").innerHTML = `
+        <h2>📌 Add Requirement</h2>
+
+        <div class="card">
+            <label>Select Student</label>
+            <select id="reqStudent"></select>
+
+            <label>Company</label>
+            <input id="reqCompany"/>
+
+            <label>Role</label>
+            <input id="reqRole"/>
+
+            <label>Date</label>
+            <input type="date" id="reqDate"/>
+
+            <label>Time</label>
+            <input type="time" id="reqTime"/>
+
+            <label>Description</label>
+            <textarea id="reqDesc"></textarea>
+
+            <button onclick="submitRequirement()">Add</button>
+        </div>
+    `;
+
+    AndroidBridge.getAllStudentsForRequirement();
 }
 
 function submitRequirement(){
-    let id = reqStudent.value;
-    let text = reqText.value.trim();
-    if(id==="" || text==="") return alert("Fill all");
+    const studentId = reqStudent.value;
+    if(!studentId){
+        alert("Select student");
+        return;
+    }
 
-    AndroidBridge.addRequirement(id, text, "management");
-    alert("Sent!");
+    const obj = {
+        company: reqCompany.value,
+        role: reqRole.value,
+        date: reqDate.value,
+        time: reqTime.value,
+        description: reqDesc.value,
+        from: "management",
+        timestamp: Date.now()
+    };
+
+    AndroidBridge.addRequirement(studentId, JSON.stringify(obj));
 }
 
-/* ================= PERSONAL CHAT ================= */
-function openChatList(role){
-    currentView = "chatList";
-    document.getElementById("content").innerHTML = `<h3>Loading list...</h3>`;
-    AndroidBridge.getUsersByRole(role);
-}
-
-function displayChatList(role, data){
-    const list = JSON.parse(data);
-    let html = `<h2>💬 Chat with ${role}s</h2>`;
-
-    Object.keys(list).forEach(id=>{
-        let u=list[id];
-        html += `
-        <div class="card" onclick="openPersonalChat('${id}','${role}')">
-            ${u.name} <br> <small>${u.email}</small>
-        </div>`;
-    });
-
-    content.innerHTML = html;
-}
-
-function openPersonalChat(id, role){
-    currentChatUser = id;
-    currentChatRole = role;
-
-    document.getElementById("content").innerHTML = `
-        <h3>💬 Chat with ${role.toUpperCase()}</h3>
-
-        <div id="chatMessages" class="chat-container"></div>
-
-        <div class="chat-input-area">
-          <input id="chatInput" placeholder="Type a message..."/>
-          <button onclick="sendPersonalMessage('${id}')">➤</button>
-        </div>
-    `;
-
-    AndroidBridge.getChatMessages(id);
-}
-
-
-function displayChatMessages(data) {
-    let msgs = JSON.parse(data);
-    let box = document.getElementById("chatMessages");
-    box.innerHTML = "";
-
-    msgs.forEach(m => {
-        let classname = m.sender === "management" ? "message-sent" : "message-received";
-        box.innerHTML += `
-           <div class="message-row"><div class="${classname}">${m.text}</div></div>
-        `;
-    });
-
-    box.scrollTop = box.scrollHeight;
-}
-
-
-function sendPersonalMessage(uid){
-    let txt = chatInput.value.trim();
-    if(txt==="") return;
-    AndroidBridge.sendPersonalMessage(uid, txt);
-    chatInput.value="";
-    AndroidBridge.getChatMessages(uid);
-}
-
-/* ================= GROUP CHAT ================= */
-function openGroupChat(batchId){
-    currentGroup = batchId;
-
-    document.getElementById("content").innerHTML = `
-        <h3>📣 Group Chat: ${batchId}</h3>
-
-        <div id="groupBox" class="chat-container"></div>
-
-        <div class="chat-input-area">
-          <input id="groupInput" placeholder="Write message..."/>
-          <button onclick="sendGroupMessage()">➤</button>
-        </div>
-    `;
-
-    AndroidBridge.getGroupMessages(batchId);
-}
-
-function loadGroupMessages(data){
-    let msgs = JSON.parse(data);
-    let box = document.getElementById("groupBox");
-    box.innerHTML = "";
-
-    msgs.forEach(msg=>{
-        let owner = msg.from === "management" ? "message-sent" : "message-received";
-        box.innerHTML += `
-          <div class="message-row"><div class="${owner}">${msg.text}</div></div>
-        `;
-    });
-
-    box.scrollTop = box.scrollHeight;
-}
-
-function sendGroupMessage(){
-    let txt = groupInput.value.trim();
-    if(txt==="") return;
-    AndroidBridge.sendGroupMessage(currentGroup, txt);
-    groupInput.value="";
-    AndroidBridge.getGroupMessages(currentGroup);
-}
-
-/* ================= Logout ================= */
+/* ================= LOGOUT ================= */
 function logout(){
-    location.href = "index1.html";
+    if(confirm("⚠️ Are you sure you want to logout?")){
+        localStorage.clear();
+        location.href = "index1.html";
+    }
 }
 
-/* ================= SIDEBAR TOGGLE ================= */
+/* ================= SIDEBAR ================= */
 document.addEventListener("DOMContentLoaded", ()=>{
-    menuBtn.addEventListener("click",()=> sidebar.classList.toggle("closed"));
+    menuBtn.addEventListener("click", ()=> sidebar.classList.toggle("closed"));
 });
