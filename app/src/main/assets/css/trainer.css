@@ -112,3 +112,61 @@ button{
 .profileCard a:hover {
     color: #002c6e;
 }
+.requirement-card {
+    background: #ffffff;
+    border-left: 5px solid #1e63da;
+    padding: 18px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+}
+
+.requirement-card label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1e63da;
+    margin-top: 8px;
+    display: block;
+}
+
+.requirement-card input,
+.requirement-card select,
+.requirement-card textarea {
+    background: #f6faff;
+    border: 1px solid #bcd6ff;
+}
+
+.requirement-card textarea {
+    min-height: 90px;
+}
+
+.requirement-card button {
+    width: 100%;
+    margin-top: 10px;
+    font-size: 1rem;
+    background: #1e63da;
+    border-radius: 8px;
+}
+
+.requirement-card button:hover {
+    background: #0c4db3;
+}
+
+/* ===========================
+   REQUIREMENT DISPLAY CARD
+=========================== */
+
+.requirement-view-card h3 {
+    color: #1e63da;
+    margin-bottom: 6px;
+}
+
+.requirement-view-card p {
+    font-size: 0.95rem;
+    margin: 4px 0;
+}
+
+.requirement-view-card .req-meta {
+    font-size: 0.85rem;
+    color: #555;
+}

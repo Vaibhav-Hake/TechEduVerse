@@ -187,22 +187,33 @@ function loadStudents(){
 function displayStudents(data){
   const list = JSON.parse(data || "{}");
 
+  // PERSONAL CHAT
   if(currentView === "personalChat"){
     let html = `<h3>🎓 Students</h3>`;
     Object.keys(list).forEach(id=>{
-      html += `<div class="card" onclick="startChat('${id}')">${list[id].traineeFullName}</div>`;
+      html += `<div class="card" onclick="startChat('${id}')">
+        ${list[id].traineeFullName}
+      </div>`;
     });
     return document.getElementById("content").innerHTML = html;
   }
 
+  // REQUIREMENT DROPDOWN
   if(currentView === "req"){
-    let dd = document.getElementById("stuList");
-    dd.innerHTML = "";
+    let dd = document.getElementById("reqStudent");
+    if(!dd) return;
+
+    dd.innerHTML = `<option value="">-- Select Student --</option>`;
     Object.keys(list).forEach(id=>{
-      dd.innerHTML += `<option value="${id}">${list[id].traineeFullName}</option>`;
+      dd.innerHTML += `
+        <option value="${id}">
+          ${list[id].traineeFullName}
+        </option>
+      `;
     });
   }
 }
+
 
 
 /* ========= CHAT WINDOW ========= */
@@ -252,22 +263,77 @@ function sendPmsg(){
 /* ========= 📌 REQUIREMENT ========= */
 function showAddRequirement(){
   currentView = "req";
-  AndroidBridge.getAllStudents();
+
   document.getElementById("content").innerHTML = `
-    <h3>📌 Send Requirement</h3>
-    <select id="stuList"></select>
-    <textarea id="reqText"></textarea>
-    <button onclick="sendReq()">Send</button>
+    <h2>📌 Add Requirement</h2>
+
+    <div class="card requirement-card">
+
+      <label>👨‍🎓 Select Student</label>
+      <select id="reqStudent"></select>
+
+      <label>🏢 Company Name</label>
+      <input type="text" id="reqCompany" placeholder="Company Name">
+
+      <label>💼 Role</label>
+      <input type="text" id="reqRole" placeholder="Job Role">
+
+      <label>📅 Date</label>
+      <input type="date" id="reqDate">
+
+      <label>⏰ Time</label>
+      <input type="time" id="reqTime">
+
+      <label>📝 Description</label>
+      <textarea id="reqDesc" rows="4" placeholder="Requirement details"></textarea>
+
+      <button onclick="submitTrainerRequirement()">➕ Add Requirement</button>
+
+    </div>
   `;
+
+  // load students
+  AndroidBridge.getAllStudents();
 }
 
-function sendReq(){
-  const id = document.getElementById("stuList").value;
-  const text = document.getElementById("reqText").value;
-  if(!text){ return alert("⚠️ Enter requirement!"); }
-  AndroidBridge.addRequirement(id, text, "trainer");
-  alert("✔️ Requirement Sent");
+function submitTrainerRequirement(){
+  const studentId = document.getElementById("reqStudent").value;
+  const company = document.getElementById("reqCompany").value.trim();
+  const role = document.getElementById("reqRole").value.trim();
+  const date = document.getElementById("reqDate").value;
+  const time = document.getElementById("reqTime").value;
+  const desc = document.getElementById("reqDesc").value.trim();
+
+  if(!studentId || !company || !role){
+    return alert("⚠️ Please fill required fields");
+  }
+
+  const obj = {
+    company,
+    role,
+    date,
+    time,
+    description: desc,
+    from: "trainer",      // 🔥 KEY DIFFERENCE
+    timestamp: Date.now()
+  };
+
+  AndroidBridge.addRequirement(
+    studentId,
+    JSON.stringify(obj)
+  );
 }
+function onRequirementAdded(){
+  alert("✅ Requirement added successfully!");
+
+  document.getElementById("reqCompany").value = "";
+  document.getElementById("reqRole").value = "";
+  document.getElementById("reqDate").value = "";
+  document.getElementById("reqTime").value = "";
+  document.getElementById("reqDesc").value = "";
+  document.getElementById("reqStudent").value = "";
+}
+
 
 
 /* ========= 🚪 LOGOUT ========= */
