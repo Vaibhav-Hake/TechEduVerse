@@ -28,6 +28,7 @@ function showBatchCards(data){
             <p><b>Trainer:</b> ${b.trainerId}</p>
 
             <button onclick="openGroupChat('${b.batchId}')">💬 Group Chat</button>
+            <button onclick="showEnrolledStudents('${b.batchId}', '${b.batchName}')">👥 Enrolled Students</button>
             <button onclick="removeBatch('${b.batchId}')">🗑️ Delete</button>
         </div>`;
     });
@@ -35,11 +36,47 @@ function showBatchCards(data){
     document.getElementById("content").innerHTML = html;
 }
 
+
 function removeBatch(id){
     if(confirm("Delete this batch?")){
         AndroidBridge.deleteBatch(id);
         showHome();
     }
+}
+function showEnrolledStudents(batchId, batchName){
+    currentView = "enrolledStudents";
+    document.getElementById("content").innerHTML = `<h3>Loading students for ${batchName}...</h3>`;
+
+    // Fetch students from AndroidBridge
+    if(AndroidBridge.getStudentsByBatch){
+        AndroidBridge.getStudentsByBatch(batchId);
+    } else {
+        alert("AndroidBridge.getStudentsByBatch() not implemented!");
+    }
+}
+
+function displayEnrolledStudents(data){
+    const students = JSON.parse(data || "{}");
+
+    let html = `<h2>👥 Enrolled Students</h2>`;
+    if(Object.keys(students).length === 0){
+        html += `<p>No students enrolled yet.</p>`;
+    } else {
+        Object.keys(students).forEach(id=>{
+            const s = students[id];
+            const name = s.traineeFullName || s.traineeName || "Unknown Student";
+
+            html += `
+            <div class="card">
+                <h3>${name}</h3>
+                <p>${s.traineeEmail || ''}</p>
+                <button onclick="openPersonalChat('${id}','student')">💬 Chat</button>
+            </div>`;
+        });
+    }
+
+    html += `<button onclick="showHome()">⬅️ Back to Batches</button>`;
+    document.getElementById("content").innerHTML = html;
 }
 
 /* ================= PROFILE ================= */

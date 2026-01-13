@@ -22,6 +22,11 @@ import android.webkit.WebViewClient;
 import android.widget.Toast;
 import android.content.pm.PackageManager;
 import java.util.Map;
+import androidx.annotation.NonNull;
+import android.content.Context;
+import java.util.HashSet;
+import java.util.Set;
+import android.content.SharedPreferences;
 
 
 import java.util.HashMap;
@@ -66,6 +71,195 @@ public class MainActivity extends AppCompatActivity {
 
 
     public class AndroidBridge {
+
+
+            private Context context;
+            private WebView webView;
+
+            public AndroidBridge(Context context, WebView webView) {
+                this.context = context;
+                this.webView = webView;
+            }
+
+            /* ================= TRAINEE ID ================= */
+
+            private String getTraineeId() {
+                SharedPreferences prefs =
+                        context.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
+
+                return prefs.getString("uuid", null); // must be saved at login
+            }
+
+            /* ================= ENROLL BATCH ================= */
+
+            @JavascriptInterface
+            public void enrollBatch(String batchJson) {
+                try {
+                    String traineeId = getTraineeId();
+                    if (traineeId == null) return;
+
+                    JSONObject batch = new JSONObject(batchJson);
+                    String batchId = batch.getString("batchId");
+
+                    Map<String, Object> batchMap = new HashMap<>();
+                    batchMap.put("batchId", batch.getString("batchId"));
+                    batchMap.put("batchName", batch.getString("batchName"));
+                    batchMap.put("subject", batch.getString("subject"));
+                    batchMap.put("time", batch.getString("time"));
+                    batchMap.put("trainerId", batch.getString("trainerId"));
+
+                    FirebaseDatabase.getInstance()
+                            .getReference("enrollments")
+                            .child(traineeId)
+                            .child(batchId)
+                            .setValue(batchMap)
+                            .addOnSuccessListener(unused ->
+                                    webView.post(() ->
+                                            webView.evaluateJavascript(
+                                                    "onBatchEnrolled()", null
+                                            )
+                                    )
+                            );
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            /* ================= GET ENROLLED BATCHES ================= */
+
+            @JavascriptInterface
+            public void getEnrolledBatches() {
+                String traineeId = getTraineeId();
+                if (traineeId == null) return;
+
+                FirebaseDatabase.getInstance()
+                        .getReference("enrollments")
+                        .child(traineeId)
+                        .addListenerForSingleValueEvent(new ValueEventListener() {
+
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                JSONArray arr = new JSONArray();
+
+                                for (DataSnapshot snap : snapshot.getChildren()) {
+                                    try {
+                                        JSONObject obj = new JSONObject();
+                                        for (DataSnapshot field : snap.getChildren()) {
+                                            obj.put(field.getKey(), field.getValue());
+                                        }
+                                        arr.put(obj);
+                                    } catch (Exception ignored) {}
+                                }
+
+                                webView.post(() ->
+                                        webView.evaluateJavascript(
+                                                "showBatchesFromFirebase(" + arr + ")", null
+                                        )
+                                );
+                            }
+
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError error) {}
+                        });
+            }
+
+            /* ================= FILTER HOME BATCHES ================= */
+
+        @JavascriptInterface
+        public void filterHomeBatches(String allBatchesJson) {
+            String traineeId = getTraineeId();
+            if (traineeId == null || traineeId.isEmpty()) {
+                webView.post(() ->
+                        webView.evaluateJavascript("showFilteredHomeBatches([])", null)
+                );
+                return;
+            }
+
+            DatabaseReference enrollRef = FirebaseDatabase.getInstance()
+                    .getReference("enrollments")
+                    .child(traineeId);
+
+            enrollRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    try {
+                        JSONArray all = new JSONArray(allBatchesJson);
+                        JSONArray result = new JSONArray();
+
+                        Set<String> enrolledIds = new HashSet<>();
+                        for (DataSnapshot s : snapshot.getChildren()) {
+                            enrolledIds.add(s.getKey());
+                        }
+
+                        for (int i = 0; i < all.length(); i++) {
+                            JSONObject b = all.getJSONObject(i);
+                            String batchId = b.getString("batchId");
+                            if (!enrolledIds.contains(batchId)) {
+                                result.put(b);
+                            }
+                        }
+
+                        String safeJson = JSONObject.quote(result.toString());
+                        webView.post(() ->
+                                webView.evaluateJavascript(
+                                        "showFilteredHomeBatches(" + safeJson + ")", null
+                                )
+                        );
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        webView.post(() ->
+                                webView.evaluateJavascript("showFilteredHomeBatches([])", null)
+                        );
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    webView.post(() ->
+                            webView.evaluateJavascript("showFilteredHomeBatches([])", null)
+                    );
+                }
+            });
+        }
+
+
+
+
+        @JavascriptInterface
+        public void getStudentsByBatch(String batchId) {
+            DatabaseReference ref = FirebaseDatabase.getInstance()
+                    .getReference("users/trainee");
+
+            ref.orderByChild("batchId").equalTo(batchId)
+                    .get().addOnSuccessListener(snapshot -> {
+                        JSONObject enrolledStudents = new JSONObject();
+
+                        for (DataSnapshot s : snapshot.getChildren()) {
+                            try {
+                                JSONObject studentData = new JSONObject();
+                                studentData.put("traineeFullName", s.child("traineeName").getValue(String.class));
+                                studentData.put("traineeEmail", s.child("traineeEmail").getValue(String.class));
+                                studentData.put("traineeId", s.getKey());
+
+                                enrolledStudents.put(s.getKey(), studentData);
+                            } catch (Exception e) {
+                                Log.e("GET_STUDENTS", e.getMessage());
+                            }
+                        }
+
+                        String safeJson = JSONObject.quote(enrolledStudents.toString());
+
+                        runOnUiThread(() ->
+                                webView.evaluateJavascript("displayEnrolledStudents(" + safeJson + ")", null)
+                        );
+                    }).addOnFailureListener(e -> {
+                        Log.e("GET_STUDENTS", e.getMessage());
+                    });
+        }
+
+
         @JavascriptInterface
         public void getTrainerAssignedBatches(String trainerId){
             DatabaseReference ref = FirebaseDatabase.getInstance()
@@ -241,21 +435,21 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
-        @JavascriptInterface
-        public void sendPersonalMessage(String partnerId, String text, String sender){
-            FirebaseUser u = FirebaseAuth.getInstance().getCurrentUser();
-            String myId = u.getUid();
-
-            MessageModel msg = new MessageModel(sender, text, System.currentTimeMillis());
-
-            FirebaseDatabase.getInstance()
-                    .getReference("chats").child(myId).child(partnerId)
-                    .push().setValue(msg);
-
-            FirebaseDatabase.getInstance()
-                    .getReference("chats").child(partnerId).child(myId)
-                    .push().setValue(msg);
-        }
+//        @JavascriptInterface
+//        public void sendPersonalMessage(String partnerId, String text, String sender){
+//            FirebaseUser u = FirebaseAuth.getInstance().getCurrentUser();
+//            String myId = u.getUid();
+//
+//            MessageModel msg = new MessageModel(sender, text, System.currentTimeMillis());
+//
+//            FirebaseDatabase.getInstance()
+//                    .getReference("chats").child(myId).child(partnerId)
+//                    .push().setValue(msg);
+//
+//            FirebaseDatabase.getInstance()
+//                    .getReference("chats").child(partnerId).child(myId)
+//                    .push().setValue(msg);
+//        }
         @JavascriptInterface
         public void getGroupMessages(String batchId){
             DatabaseReference ref = FirebaseDatabase.getInstance()
@@ -748,6 +942,13 @@ public class MainActivity extends AppCompatActivity {
 
                             // ⚡ Save UUID in localStorage inside WebView
                             webView.evaluateJavascript("localStorage.setItem('uuid', '"+ currentUserId +"');", null);
+                            // ✅ ALSO SAVE UUID FOR ANDROID BRIDGE (VERY IMPORTANT)
+                            SharedPreferences prefs =
+                                    getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
+
+                            prefs.edit()
+                                    .putString("uuid", currentUserId)
+                                    .apply();
 
                             // Load separate dashboard for each role
                             String pageUrl = "file:///android_asset/dashbord.html";
@@ -1025,7 +1226,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        webView.addJavascriptInterface(new AndroidBridge(), "AndroidBridge");
+        webView.addJavascriptInterface(new AndroidBridge(this, webView), "AndroidBridge");
+
         webView.loadUrl("file:///android_asset/index1.html");
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true)

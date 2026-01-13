@@ -2,6 +2,9 @@
 let currentView = "home";
 let currentBatch = "";
 let chatPartner = "";
+let myRole = "trainer";        // 👈 FIXED
+let chattingWithRole = "";    // 👈 FIXED
+
 
 /* ========= 🏠 HOME ========= */
 function showHome(){
@@ -33,7 +36,6 @@ function showAssignedBatches(data){
 
   document.getElementById("content").innerHTML = html;
 }
-
 
 /* ========= 👤 PROFILE ========= */
 function showProfile() {
@@ -87,7 +89,6 @@ function showProfileDetails(data) {
   }
 }
 
-
 /* ========= 💬 GROUP CHAT ========= */
 function openGroupChat(batchId){
   if(!batchId){ return alert("❌ Invalid Batch ID"); }
@@ -95,22 +96,15 @@ function openGroupChat(batchId){
   currentView = "groupChat";
   currentBatch = batchId;
 
-  if(AndroidBridge.getGroupMessages){
-      AndroidBridge.getGroupMessages(batchId);
-  } else if(AndroidBridge.getBatchMessages){
-      AndroidBridge.getBatchMessages(batchId); // fallback
-  } else {
-      return alert("❌ No chat API found in Android");
-  }
-
   document.getElementById("content").innerHTML = `
     <h2>📢 Group Chat - ${batchId}</h2>
     <div id="chatBox" class="chatArea" style="height:300px;overflow:auto;padding:10px;background:white;"></div>
     <input id="msgInput" placeholder="Type message...">
     <button onclick="sendGroupMsg()">Send</button>
   `;
-}
 
+  AndroidBridge.getGroupMessages(batchId);
+}
 
 function loadGroupMessages(data){
   const msgs = JSON.parse(data || "{}");
@@ -119,27 +113,32 @@ function loadGroupMessages(data){
 
   Object.keys(msgs).forEach(k=>{
     let m = msgs[k];
-    box.innerHTML += `<p><b>${m.from}:</b> ${m.text}</p>`;
+    const align = m.from === "trainer" ? "right" : "left";
+    const bg = m.from === "trainer" ? "#dbe9ff" : "#f1f1f1";
+    box.innerHTML += `<div style="text-align:${align}; margin:6px 0;">
+      <span style="display:inline-block;padding:8px 12px;border-radius:12px;background:${bg};max-width:70%;">
+        ${m.text}
+      </span>
+    </div>`;
   });
 
   box.scrollTop = box.scrollHeight;
 }
+
 function sendGroupMsg(){
-   let text = document.getElementById("msgInput").value;
-   if(text.trim() == "") return;
+   let text = document.getElementById("msgInput").value.trim();
+   if(!text) return;
 
    AndroidBridge.sendGroupMessage(currentBatch, text, "trainer");
+   document.getElementById("msgInput").value = "";
    AndroidBridge.getGroupMessages(currentBatch);
 }
 
-
-
-/* ========= 👥 PERSONAL CHAT ========= */
+/* ========= 💬 PERSONAL CHAT ========= */
 function showPersonalChat(){
   currentView = "personalChatMain";
   document.getElementById("content").innerHTML = `
     <h2>📱 Personal Chat</h2>
-
     <button onclick="loadManagement()">Chat with Management</button>
     <br><br>
     <button onclick="loadStudents()">Chat with Students</button>
@@ -147,118 +146,132 @@ function showPersonalChat(){
 }
 
 function loadManagement(){
+  chattingWithRole = "management"; // important
   currentView = "personalChat";
+  AndroidBridge.getUsersByRole("management");
+}
 
-  if(AndroidBridge.getManagementUsers){
-      AndroidBridge.getManagementUsers();
-  } else if(AndroidBridge.getAllTrainersForChat){
-      AndroidBridge.getAllTrainersForChat();
-  } else {
-      alert("❌ No Management API found in Android");
-  }
+function loadStudents(){
+  chattingWithRole = "trainee"; // important
+  currentView = "personalChat";
+  AndroidBridge.getUsersByRole("trainee");
 }
 
 
-// MANAGEMENT/TRAINERS LIST
-function loadTrainerList(data){
-  const trainers = JSON.parse(data || "{}");
-  let html = `<h3>👨‍💼 Management / Trainers</h3>`;
 
-  Object.keys(trainers).forEach(id=>{
-    const name = trainers[id].mFullName || trainers[id].tFullName || "Unknown";
-    html += `<div class="card" onclick="startChat('${id}')">${name}</div>`;
+
+// UNIVERSAL CHAT LIST HANDLER (SAFE)
+function displayChatList(arg1, arg2){
+  let data, role;
+
+  // Case 1: Android sent (role, data)
+  if(typeof arg1 === "string" && arg2){
+    role = arg1;
+    data = arg2;
+  }
+  // Case 2: Android sent only (data)
+  else{
+    role = chattingWithRole;
+    data = arg1;
+  }
+
+  const list = JSON.parse(data || "{}");
+
+  let title =
+    role === "management" ? "Management" : "Students";
+
+  let html = `<h2>💬 Chat with ${title}</h2>`;
+
+  if(Object.keys(list).length === 0){
+    html += `<p>No users found</p>`;
+  }
+
+  Object.keys(list).forEach(id => {
+    const u = list[id];
+
+    const name =
+      u.mFullName ||
+      u.tFullName ||
+      u.traineeFullName ||
+      u.name ||
+      "Unknown";
+
+    html += `
+      <div class="card"
+           onclick="openPersonalChat('${id}','${role}')">
+        ${name}
+      </div>
+    `;
   });
 
   document.getElementById("content").innerHTML = html;
-  if(typeof AndroidBridge !== "undefined"){
-    AndroidBridge.loadTrainerList = loadTrainerList; // ensure mapping
-    AndroidBridge.displayStudents = displayStudents; // ensure mapping
-  }
-
-}
-
-// STUDENTS LIST
-function loadStudents(){
-  currentView = "personalChat";
-  AndroidBridge.getAllStudents();
-}
-
-/* ========= SINGLE FUNCTION FOR STUDENT DATA ========= */
-function displayStudents(data){
-  const list = JSON.parse(data || "{}");
-
-  // PERSONAL CHAT
-  if(currentView === "personalChat"){
-    let html = `<h3>🎓 Students</h3>`;
-    Object.keys(list).forEach(id=>{
-      html += `<div class="card" onclick="startChat('${id}')">
-        ${list[id].traineeFullName}
-      </div>`;
-    });
-    return document.getElementById("content").innerHTML = html;
-  }
-
-  // REQUIREMENT DROPDOWN
-  if(currentView === "req"){
-    let dd = document.getElementById("reqStudent");
-    if(!dd) return;
-
-    dd.innerHTML = `<option value="">-- Select Student --</option>`;
-    Object.keys(list).forEach(id=>{
-      dd.innerHTML += `
-        <option value="${id}">
-          ${list[id].traineeFullName}
-        </option>
-      `;
-    });
-  }
 }
 
 
-
-/* ========= CHAT WINDOW ========= */
-function startChat(id){
-  if(!id){ return alert("⚠️ Invalid User"); }
-
+function openPersonalChat(id, role){
   chatPartner = id;
-  currentView = "chat";
-
-  if(AndroidBridge.getChatHistory){
-      AndroidBridge.getChatHistory(id);
-  } else {
-      return alert("❌ Chat History API Missing");
-  }
+  chattingWithRole = role;
+  currentView = "personalChatWindow";
 
   document.getElementById("content").innerHTML = `
-      <h2>💬 Chat with ${id}</h2>
-      <div id="chatWindow" style="height:300px;overflow:auto;background:white;padding:10px;border-radius:10px;"></div>
-      <input id="pmsg">
-      <button onclick="sendPmsg()">Send</button>
+    <h3>💬 Chat</h3>
+    <div id="chatMessages"
+         style="height:300px;overflow:auto;padding:10px;background:white;border-radius:10px;">
+    </div>
+
+    <div style="margin-top:10px;display:flex;gap:5px;">
+      <input id="chatInput"
+             placeholder="Type a message..."
+             style="flex:1;padding:8px;border-radius:6px;border:1px solid #bcd4ff;">
+      <button onclick="sendPersonalMessage()">➤</button>
+    </div>
   `;
+
+  AndroidBridge.getChatMessages(id);
 }
 
-
-function showChatMessages(data){
-  const msgs = JSON.parse(data || "{}");
-  let box = document.getElementById("chatWindow");
+function displayChatMessages(data){
+  const msgsObj = JSON.parse(data || "{}");
+  const box = document.getElementById("chatMessages");
   box.innerHTML = "";
 
-  Object.keys(msgs).forEach(k=>{
-    let m = msgs[k];
-    box.innerHTML += `<p><b>${m.from}:</b> ${m.text}</p>`;
+  const msgs = Object.values(msgsObj)
+    .sort((a,b)=>(a.timestamp||0)-(b.timestamp||0));
+
+  msgs.forEach(m => {
+    const from = (m.from || "").toLowerCase().trim();
+
+    const align = from === myRole ? "right" : "left";
+    const bg    = from === myRole ? "#dbe9ff" : "#f1f1f1";
+
+    box.innerHTML += `
+      <div style="text-align:${align};margin:6px 0;">
+        <span style="display:inline-block;
+                     padding:8px 12px;
+                     border-radius:12px;
+                     background:${bg};
+                     max-width:70%;">
+          ${m.text}
+        </span>
+      </div>`;
   });
 
   box.scrollTop = box.scrollHeight;
 }
 
-function sendPmsg(){
-  let msg = document.getElementById("pmsg").value.trim();
-  if(!msg) return;
-  AndroidBridge.sendPersonalMessage(chatPartner, msg, "trainer");
-  AndroidBridge.getChatHistory(chatPartner);
-  document.getElementById("pmsg").value = "";
-}
+function sendPersonalMessage(){
+  const txt = document.getElementById("chatInput").value.trim();
+  if(!txt) return;
 
+  AndroidBridge.sendPersonalMessage(
+    chatPartner,
+    txt,
+    myRole          // 👈 FIXED
+  );
+
+  document.getElementById("chatInput").value = "";
+  AndroidBridge.getChatMessages(chatPartner);
+}
 
 /* ========= 📌 REQUIREMENT ========= */
 function showAddRequirement(){
@@ -266,33 +279,18 @@ function showAddRequirement(){
 
   document.getElementById("content").innerHTML = `
     <h2>📌 Add Requirement</h2>
-
     <div class="card requirement-card">
-
       <label>👨‍🎓 Select Student</label>
       <select id="reqStudent"></select>
-
-      <label>🏢 Company Name</label>
-      <input type="text" id="reqCompany" placeholder="Company Name">
-
-      <label>💼 Role</label>
-      <input type="text" id="reqRole" placeholder="Job Role">
-
-      <label>📅 Date</label>
-      <input type="date" id="reqDate">
-
-      <label>⏰ Time</label>
-      <input type="time" id="reqTime">
-
-      <label>📝 Description</label>
-      <textarea id="reqDesc" rows="4" placeholder="Requirement details"></textarea>
-
+      <label>🏢 Company Name</label><input type="text" id="reqCompany" placeholder="Company Name">
+      <label>💼 Role</label><input type="text" id="reqRole" placeholder="Job Role">
+      <label>📅 Date</label><input type="date" id="reqDate">
+      <label>⏰ Time</label><input type="time" id="reqTime">
+      <label>📝 Description</label><textarea id="reqDesc" rows="4" placeholder="Requirement details"></textarea>
       <button onclick="submitTrainerRequirement()">➕ Add Requirement</button>
-
     </div>
   `;
 
-  // load students
   AndroidBridge.getAllStudents();
 }
 
@@ -308,24 +306,12 @@ function submitTrainerRequirement(){
     return alert("⚠️ Please fill required fields");
   }
 
-  const obj = {
-    company,
-    role,
-    date,
-    time,
-    description: desc,
-    from: "trainer",      // 🔥 KEY DIFFERENCE
-    timestamp: Date.now()
-  };
-
-  AndroidBridge.addRequirement(
-    studentId,
-    JSON.stringify(obj)
-  );
+  const obj = { company, role, date, time, description: desc, from: "trainer", timestamp: Date.now() };
+  AndroidBridge.addRequirement(studentId, JSON.stringify(obj));
 }
+
 function onRequirementAdded(){
   alert("✅ Requirement added successfully!");
-
   document.getElementById("reqCompany").value = "";
   document.getElementById("reqRole").value = "";
   document.getElementById("reqDate").value = "";
@@ -334,11 +320,18 @@ function onRequirementAdded(){
   document.getElementById("reqStudent").value = "";
 }
 
-
-
 /* ========= 🚪 LOGOUT ========= */
-function logout(){ location.href = "index1.html"; }
+function logout(){
+    const confirmLogout = confirm("⚠️ Are you sure you want to logout?");
 
+    if(confirmLogout){
+        // Optional: clear session data
+        localStorage.clear();
+
+        location.href = "index1.html";
+    }
+    // else → do nothing
+}
 
 /* ========= SIDEBAR TOGGLE ========= */
 document.addEventListener("DOMContentLoaded", () => {
@@ -348,3 +341,8 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.addEventListener("click",()=> sidebar.classList.toggle("closed"));
   }
 });
+
+
+
+
+

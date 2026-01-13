@@ -1,18 +1,145 @@
 /* ================= GLOBAL ================= */
 let currentView = "home";
+let currentGroup = null;
 
 /* ================= HOME ================= */
 function showHome() {
     currentView = "home";
-    const content = document.getElementById("content");
-    content.innerHTML = `
+    document.getElementById("content").innerHTML = "<h3>Loading Batches...</h3>";
+
+    if (window.AndroidBridge && AndroidBridge.getAllBatches) {
+        AndroidBridge.getAllBatches();
+    }
+}
+
+/* ===== CALLBACK FROM ANDROID ===== */
+function showBatchCards(data) {
+    let allBatches = [];
+
+    try {
+        allBatches = typeof data === "string" ? JSON.parse(data) : data;
+    } catch (e) {
+        console.error("Batch parse error:", e);
+    }
+
+    // IMPORTANT:
+    // Do NOT filter using localStorage
+    // Firebase controls enrollment
+    showFilteredHomeBatches(allBatches);
+}
+
+/* ================= HOME UI ================= */
+function showFilteredHomeBatches(batches) {
+    let html = `<h2>📋 All Batches</h2>`;
+
+    if (!batches || batches.length === 0) {
+        html += `<p style="opacity:.6">No available batches</p>`;
+        document.getElementById("content").innerHTML = html;
+        return;
+    }
+
+    batches.forEach(b => {
+        html += `
         <div class="card">
-            <h3>📘 Ongoing Batch</h3>
-            <p><b>Course:</b> Java Full Stack</p>
-            <p><b>Trainer:</b> Rahul Sir</p>
-            <p><b>Time:</b> 10 AM – 12 PM</p>
-        </div>
+            <h3>${b.batchName}</h3>
+            <p><b>ID:</b> ${b.batchId}</p>
+            <p><b>Subject:</b> ${b.subject}</p>
+            <p><b>Time:</b> ${b.time}</p>
+            <p><b>Trainer:</b> ${b.trainerId}</p>
+          <button onclick="enrollBatch('${encodeURIComponent(JSON.stringify(b))}')">
+
+                👥 Enroll
+            </button>
+        </div>`;
+    });
+
+    document.getElementById("content").innerHTML = html;
+}
+
+/* ================= ENROLL ================= */
+function enrollBatch(encodedBatch) {
+    try {
+        const batchObj = JSON.parse(decodeURIComponent(encodedBatch));
+
+        if (window.AndroidBridge && AndroidBridge.enrollBatch) {
+            AndroidBridge.enrollBatch(JSON.stringify(batchObj));
+        } else {
+            alert("AndroidBridge not available");
+        }
+    } catch (e) {
+        console.error("Enroll error:", e);
+        alert("Failed to enroll batch");
+    }
+}
+
+
+/* ===== CALLBACK AFTER ENROLL ===== */
+function onBatchEnrolled() {
+    alert("✅ Enrolled successfully");
+
+    // 🔐 Save enrolled batch id locally
+    const lastBatch = JSON.parse(
+        localStorage.getItem("lastEnrolledBatch")
+    );
+
+    if (lastBatch) {
+        let enrolled =
+            JSON.parse(localStorage.getItem("enrolledBatches") || "[]");
+
+        if (!enrolled.includes(lastBatch.batchId)) {
+            enrolled.push(lastBatch.batchId);
+            localStorage.setItem("enrolledBatches", JSON.stringify(enrolled));
+        }
+
+        localStorage.removeItem("lastEnrolledBatch");
+    }
+
+    showHome(); // 🔄 Refresh home
+}
+
+
+/* ================= GROUP CHAT ================= */
+function openGroupChat(batchId){
+    currentGroup = batchId;
+
+    document.getElementById("content").innerHTML = `
+        <h3>📣 Group Chat: ${batchId}</h3>
+        <div id="groupBox" class="chat-container"></div>
     `;
+
+    AndroidBridge.getGroupMessages(batchId);
+}
+
+function loadGroupMessages(data){
+    const msgs = typeof data === "string" ? JSON.parse(data) : data;
+    const box = document.getElementById("groupBox");
+    box.innerHTML = "";
+
+    if(!msgs || Object.keys(msgs).length === 0){
+        box.innerHTML = "<p style='opacity:.5'>No messages yet</p>";
+        return;
+    }
+
+    Object.keys(msgs).forEach(key=>{
+        const msg = msgs[key];
+        const css = msg.from === "management"
+            ? "message-sent"
+            : "message-received";
+
+        box.innerHTML += `
+            <div class="message-row">
+                <div class="${css}">
+                    <b>${msg.from || "Unknown"}</b><br>
+                    ${msg.text || ""}
+                    <div style="font-size:11px;opacity:.5">
+                        ${msg.timestamp ? new Date(msg.timestamp).toLocaleString() : ""}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    box.scrollTop = box.scrollHeight;
 }
 
 /* ================= PROFILE ================= */
@@ -110,20 +237,36 @@ function showProfileDetails(data) {
     }
 }
 
-/* ================= BATCHES ================= */
+/* ================= MY BATCHES ================= */
 function showBatches() {
     currentView = "batches";
-    document.getElementById("content").innerHTML = `
-        <div class="card">
-            <h3>📚 My Batches</h3>
-            <ul>
-                <li>Java Full Stack</li>
-                <li>DSA</li>
-            </ul>
-        </div>
-    `;
+    document.getElementById("content").innerHTML = "<p>Loading...</p>";
+    AndroidBridge.getEnrolledBatches();
 }
 
+function showBatchesFromFirebase(batches) {
+    if (!batches || batches.length === 0) {
+        document.getElementById("content").innerHTML = `
+            <div class="card">
+                <h3>📚 My Batches</h3>
+                <p style="opacity:.6">No enrolled batch</p>
+            </div>`;
+        return;
+    }
+
+    let html = `<h2>📚 My Batches</h2>`;
+    batches.forEach(b => {
+        html += `
+            <div class="card">
+                <h3>${b.batchName}</h3>
+                <p><b>Subject:</b> ${b.subject}</p>
+                <p><b>Time:</b> ${b.time}</p>
+                <button onclick="openGroupChat('${b.batchId}')">💬 Group Chat</button>
+            </div>`;
+    });
+
+    document.getElementById("content").innerHTML = html;
+}
 /* ================= MESSAGES ================= */
 function showMessages() {
     currentView = "messages";
@@ -179,21 +322,11 @@ function showResume() {
     `;
 }
 
+
 /* ================= LOGOUT ================= */
-function logout() {
-    location.href = "index1.html";
+function logout(){
+    if(confirm("⚠️ Are you sure you want to logout?")){
+        localStorage.clear();
+        location.href = "index1.html";
+    }
 }
-
-/* ================= SIDEBAR TOGGLE ================= */
-document.addEventListener("DOMContentLoaded", () => {
-    const menuBtn = document.getElementById("menuBtn");
-    const sidebar = document.getElementById("sidebar");
-    if(menuBtn && sidebar){
-        menuBtn.addEventListener("click", () => sidebar.classList.toggle("closed"));
-    }
-
-    const toggleBtn = document.getElementById('sidebarToggle');
-    if(toggleBtn && sidebar){
-        toggleBtn.addEventListener('click', () => sidebar.classList.toggle('collapsed'));
-    }
-});
