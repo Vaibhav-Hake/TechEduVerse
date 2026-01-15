@@ -490,8 +490,49 @@ function openPersonalChat(id, role){
         </div>
     `;
 
-    AndroidBridge.getChatMessages(id);
+    // 🔁 Try both directions
+    loadPersonalChat(id);
 }
+function loadPersonalChat(otherId){
+    const myId = localStorage.getItem("uuid");
+
+    // First try management → trainee
+    AndroidBridge.getChatMessages(otherId);
+
+    // Fallback handler
+    window.displayChatMessages = function(data){
+        let msgs = JSON.parse(data || "[]");
+
+        if(!msgs || msgs.length === 0){
+            // Try reverse direction
+            AndroidBridge.getChatMessagesReverse(otherId);
+            return;
+        }
+
+        renderPersonalMessages(msgs);
+    };
+}
+function renderPersonalMessages(msgs){
+    let box = document.getElementById("chatMessages");
+    box.innerHTML = "";
+
+    msgs.forEach(m=>{
+        let cls = m.sender === "management"
+            ? "message-sent"
+            : "message-received";
+
+        box.innerHTML += `
+          <div class="message-row">
+            <div class="${cls}">
+              ${m.text}
+            </div>
+          </div>
+        `;
+    });
+
+    box.scrollTop = box.scrollHeight;
+}
+
 
 
 function displayChatMessages(data) {
@@ -513,10 +554,14 @@ function displayChatMessages(data) {
 function sendPersonalMessage(uid){
     let txt = chatInput.value.trim();
     if(txt==="") return;
+
     AndroidBridge.sendPersonalMessage(uid, txt);
-    chatInput.value="";
-    AndroidBridge.getChatMessages(uid);
+    chatInput.value = "";
+
+    // Refresh
+    loadPersonalChat(uid);
 }
+
 
 /* ================= GROUP CHAT ================= */
 function openGroupChat(batchId){

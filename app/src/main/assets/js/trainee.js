@@ -268,48 +268,180 @@ function showBatchesFromFirebase(batches) {
     document.getElementById("content").innerHTML = html;
 }
 /* ================= MESSAGES ================= */
+/* ================= MESSAGES ================= */
 function showMessages() {
     currentView = "messages";
+
     document.getElementById("content").innerHTML = `
-        <div class="card">
-            <h3>💬 Messages</h3>
-            <p>Trainer: Complete assignment</p>
+        <h2>💬 Messages</h2>
+
+        <div class="card" onclick="openManagementChat()">
+            <h3>🏢 Chat with Management</h3>
+            <p>Direct messages with management</p>
+        </div>
+
+        <div class="card" onclick="openTrainerChat()">
+            <h3>🎓 Chat with Trainer</h3>
+            <p>Direct messages with trainer</p>
         </div>
     `;
 }
+function openManagementChat(){
+    const traineeId = localStorage.getItem("uuid");
+    const managementId = "MANAGEMENT_UUID"; // keep static or load later
+
+    openPersonalChat(traineeId, managementId, "management");
+}
+function openTrainerChat(){
+    const traineeId = localStorage.getItem("uuid");
+    const trainerId = localStorage.getItem("trainerId"); // optional, if saved
+
+    if(!trainerId){
+        alert("Trainer not assigned yet");
+        return;
+    }
+
+    openPersonalChat(traineeId, trainerId, "trainer");
+}
+let currentChatTo = "";
+let currentChatRole = "";
+
+function openPersonalChat(fromId, toId, toRole){
+    currentChatTo = toId;
+    currentChatRole = toRole;
+
+    document.getElementById("content").innerHTML = `
+        <h3>💬 Chat with ${toRole}</h3>
+        <div id="chatBox" class="chat-container"></div>
+
+        <div class="chat-input">
+            <input id="msgText" placeholder="Type message...">
+            <button onclick="sendPersonalMessage()">Send</button>
+        </div>
+    `;
+
+    AndroidBridge.getPersonalChats(fromId, toId);
+}
+function showPersonalChats(data){
+    const msgs = JSON.parse(data);
+    const box = document.getElementById("chatBox");
+    box.innerHTML = "";
+
+    if(!msgs || msgs.length === 0){
+        box.innerHTML = "<p style='opacity:.5'>No messages yet</p>";
+        return;
+    }
+
+    msgs.forEach(m=>{
+        const cls = m.sender === "trainee"
+            ? "message-sent"
+            : "message-received";
+
+        box.innerHTML += `
+            <div class="message-row">
+                <div class="${cls}">
+                    ${m.text}
+                    <div style="font-size:11px;opacity:.5">
+                        ${new Date(m.timestamp).toLocaleString()}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    box.scrollTop = box.scrollHeight;
+}
+function sendPersonalMessage(){
+    const text = document.getElementById("msgText").value.trim();
+    if(!text) return;
+
+    const payload = {
+        fromId: localStorage.getItem("uuid"),
+        toId: currentChatTo,
+        sender: "trainee",
+        text: text
+    };
+
+    AndroidBridge.sendPersonalMessage(JSON.stringify(payload));
+    document.getElementById("msgText").value = "";
+}
+
 
 /* ================= REQUIREMENTS ================= */
 function showRequirements() {
     currentView = "requirements";
+
     document.getElementById("content").innerHTML = `
         <div class="card">
-            <h3>🧾 Requirements</h3>
-            <ul>
-                <li>Placement</li>
-                <li>Mock Interview</li>
-            </ul>
+            <h3>📌 Requirements</h3>
+            <p style="opacity:.6">Loading...</p>
         </div>
     `;
-}
-function showRequirements(){
+
     const uid = localStorage.getItem("uuid");
 
-    if(AndroidBridge.getStudentRequirements){
-        AndroidBridge.getStudentRequirements(uid);
+    if (!uid) {
+        document.getElementById("content").innerHTML = `
+            <div class="card empty-card">
+                <h3>📌 Requirements</h3>
+                <p>No user logged in</p>
+            </div>
+        `;
+        return;
     }
+
+  AndroidBridge.getMyRequirements(uid);
+
 }
 
-function displayRequirements(data){
-    const req = JSON.parse(data);
-    let html = `<h2>📌 Requirements</h2>`;
-    Object.keys(req).forEach(id=>{
-        html += `<div class="card">
-            <p>${req[id].text}</p>
-            <small>From: ${req[id].from}</small>
-        </div>`;
+
+
+function displayRequirements(data) {
+    let req = {};
+
+    try {
+        req = typeof data === "string" ? JSON.parse(data) : data;
+    } catch (e) {
+        console.error("Requirement parse error", e);
+    }
+
+    // 🔴 No requirements
+    if (!req || Object.keys(req).length === 0) {
+        document.getElementById("content").innerHTML = `
+            <div class="card empty-card">
+                <h3>📌 Requirements</h3>
+                <p style="opacity:.6">No requirements available</p>
+            </div>
+        `;
+        return;
+    }
+
+    let html = `<h2>📌 My Requirements</h2>`;
+
+    Object.keys(req).forEach(id => {
+        const r = req[id];
+
+        html += `
+        <div class="card requirement-card">
+            <h3>${r.company || "Company"}</h3>
+            <p><b>Role:</b> ${r.role || "-"}</p>
+            <p><b>Description:</b> ${r.description || "-"}</p>
+
+            <div class="req-footer">
+                <span>📅 ${r.date || ""}</span>
+                <span>⏰ ${r.time || ""}</span>
+            </div>
+
+            <div class="req-from">
+                From: ${r.from || "N/A"}
+            </div>
+        </div>
+        `;
     });
+
     document.getElementById("content").innerHTML = html;
 }
+
 
 /* ================= RESUME ================= */
 function showResume() {

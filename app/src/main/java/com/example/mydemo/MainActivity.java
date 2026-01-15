@@ -72,8 +72,98 @@ public class MainActivity extends AppCompatActivity {
 
     public class AndroidBridge {
 
+        @JavascriptInterface
+        public void sendPersonalMessage(String json) {
+            try {
+                JSONObject obj = new JSONObject(json);
 
-            private Context context;
+                String fromId = obj.getString("fromId");
+                String toId   = obj.getString("toId");
+
+                Map<String, Object> msg = new HashMap<>();
+                msg.put("sender", obj.getString("sender"));
+                msg.put("text", obj.getString("text"));
+                msg.put("timestamp", System.currentTimeMillis());
+
+                FirebaseDatabase.getInstance(
+                                "https://mydemofirebase-b58cd-default-rtdb.firebaseio.com/"
+                        )
+                        .getReference("personalChats")
+                        .child(fromId)
+                        .child(toId)
+                        .push()
+                        .setValue(msg);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        @JavascriptInterface
+        public void getPersonalChats(String fromId, String toId) {
+
+            DatabaseReference ref = FirebaseDatabase.getInstance()
+                    .getReference("personalChats")
+                    .child(fromId)
+                    .child(toId);
+
+            ref.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot snapshot) {
+
+                    JSONArray arr = new JSONArray();
+
+                    for (DataSnapshot snap : snapshot.getChildren()) {
+                        try {
+                            JSONObject obj = new JSONObject();
+                            obj.put("sender", snap.child("sender").getValue(String.class));
+                            obj.put("text", snap.child("text").getValue(String.class));
+                            obj.put("timestamp", snap.child("timestamp").getValue(Long.class));
+                            arr.put(obj);
+                        } catch (Exception ignored) {}
+                    }
+
+                    String safe = JSONObject.quote(arr.toString());
+                    webView.evaluateJavascript("showPersonalChats("+safe+");", null);
+                }
+
+                @Override
+                public void onCancelled(DatabaseError error) {}
+            });
+        }
+
+        @JavascriptInterface
+        public void getMyRequirements(String traineeId) {
+
+            DatabaseReference ref = FirebaseDatabase.getInstance(
+                    "https://mydemofirebase-b58cd-default-rtdb.firebaseio.com/"
+            ).getReference("requirements").child(traineeId);
+
+            ref.get().addOnSuccessListener(snapshot -> {
+                try {
+                    JSONObject obj = new JSONObject();
+
+                    for (DataSnapshot snap : snapshot.getChildren()) {
+                        obj.put(
+                                snap.getKey(),
+                                new JSONObject(new Gson().toJson(snap.getValue()))
+                        );
+                    }
+
+                    String safe = JSONObject.quote(obj.toString());
+                    webView.evaluateJavascript(
+                            "displayRequirements(" + safe + ");",
+                            null
+                    );
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+
+
+
+        private Context context;
             private WebView webView;
 
             public AndroidBridge(Context context, WebView webView) {

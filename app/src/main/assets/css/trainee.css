@@ -1,6 +1,7 @@
  /* ===========================
    GLOBAL
 =========================== */
+
 body {
     margin: 0;
     padding: 0;
@@ -292,3 +293,30 @@ textarea {
     font-size: 0.85rem;
     color: #555;
 }
+.requirement-card {
+    border-left: 4px solid #4CAF50;
+}
+
+.req-footer {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    opacity: 0.7;
+    margin-top: 6px;
+}
+
+.req-from {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #666;
+}
+
+.empty-card {
+    text-align: center;
+    padding: 30px;
+    opacity: 0.7;
+}
+.msg { padding:8px; margin:6px; border-radius:6px; max-width:70%; }
+.me { background:#dcf8c6; margin-left:auto; }
+.other { background:#eee; }
+.send { display:flex; gap:6px; margin-top:10px; }
