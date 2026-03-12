@@ -287,62 +287,89 @@ function showMessages() {
     `;
 }
 function openManagementChat(){
-    const traineeId = localStorage.getItem("uuid");
-    const managementId = "MANAGEMENT_UUID"; // keep static or load later
-
-    openPersonalChat(traineeId, managementId, "management");
+    const managementId = "81e90a7f-8045-481f-8a6e-620a395eec47"; // real management UUID
+    openPersonalChat(managementId, "management");
 }
 function openTrainerChat(){
-    const traineeId = localStorage.getItem("uuid");
-    const trainerId = localStorage.getItem("trainerId"); // optional, if saved
+
+    //const trainerId = localStorage.getItem("trainerId");
 
     if(!trainerId){
         alert("Trainer not assigned yet");
         return;
     }
 
-    openPersonalChat(traineeId, trainerId, "trainer");
+    openPersonalChat(trainerId, "trainer");
 }
+/* ================= GLOBAL ================= */
 let currentChatTo = "";
 let currentChatRole = "";
 
-function openPersonalChat(fromId, toId, toRole){
-    currentChatTo = toId;
-    currentChatRole = toRole;
+/* ================= OPEN PERSONAL CHAT ================= */
+function openPersonalChat(id, role){
+
+    currentChatUser = id;
+    currentChatRole = role;
+
+    console.log("Opening chat with:", id);   // DEBUG
+    console.log("My ID:", localStorage.getItem("uuid")); // DEBUG
 
     document.getElementById("content").innerHTML = `
-        <h3>💬 Chat with ${toRole}</h3>
-        <div id="chatBox" class="chat-container"></div>
+        <h3>💬 Chat with ${role.toUpperCase()}</h3>
+        <div id="chatMessages" class="chat-container"></div>
 
-        <div class="chat-input">
-            <input id="msgText" placeholder="Type message...">
-            <button onclick="sendPersonalMessage()">Send</button>
+        <div class="chat-input-area">
+          <input id="chatInput" placeholder="Type a message..."/>
+          <button onclick="sendPersonalMessage()">➤</button>
         </div>
     `;
 
-    AndroidBridge.getPersonalChats(fromId, toId);
+    AndroidBridge.getChatMessages(id);
 }
+
+/* ================= DISPLAY MESSAGES ================= */
 function showPersonalChats(data){
-    const msgs = JSON.parse(data);
-    const box = document.getElementById("chatBox");
+
+    let raw;
+
+    try{
+        raw = typeof data === "string" ? JSON.parse(data) : data;
+    }catch(e){
+        console.error("Parse error:", e);
+        raw = {};
+    }
+
+    const myId = localStorage.getItem("uuid");
+    const box = document.getElementById("chatMessages");
+
+    if(!box) return;
+
     box.innerHTML = "";
 
-    if(!msgs || msgs.length === 0){
+    if(!raw || Object.keys(raw).length === 0){
         box.innerHTML = "<p style='opacity:.5'>No messages yet</p>";
         return;
     }
 
+    // 🔥 Convert OBJECT → ARRAY
+    const msgs = Object.values(raw);
+
+    msgs.sort((a,b)=>(a.timestamp||0)-(b.timestamp||0));
+
     msgs.forEach(m=>{
-        const cls = m.sender === "trainee"
+
+        const cls = m.senderId === myId
             ? "message-sent"
             : "message-received";
 
         box.innerHTML += `
             <div class="message-row">
                 <div class="${cls}">
-                    ${m.text}
+                    ${m.text || ""}
                     <div style="font-size:11px;opacity:.5">
-                        ${new Date(m.timestamp).toLocaleString()}
+                        ${m.timestamp
+                          ? new Date(m.timestamp).toLocaleString()
+                          : ""}
                     </div>
                 </div>
             </div>
@@ -351,19 +378,20 @@ function showPersonalChats(data){
 
     box.scrollTop = box.scrollHeight;
 }
+/* ================= SEND MESSAGE ================= */
 function sendPersonalMessage(){
-    const text = document.getElementById("msgText").value.trim();
-    if(!text) return;
 
-    const payload = {
-        fromId: localStorage.getItem("uuid"),
-        toId: currentChatTo,
-        sender: "trainee",
-        text: text
-    };
+    const input = document.getElementById("chatInput");
+    if(!input) return;
 
-    AndroidBridge.sendPersonalMessage(JSON.stringify(payload));
-    document.getElementById("msgText").value = "";
+    const txt = input.value.trim();
+    if(txt==="") return;
+
+    console.log("Sending to:", currentChatUser);
+
+    AndroidBridge.sendPersonalMessage(currentChatUser, txt);
+
+    input.value="";
 }
 
 

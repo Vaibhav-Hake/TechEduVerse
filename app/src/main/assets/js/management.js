@@ -459,20 +459,78 @@ function openChatList(role){
     document.getElementById("content").innerHTML = `<h3>Loading list...</h3>`;
     AndroidBridge.getUsersByRole(role);
 }
+function showPersonalChats(data){
+
+    let raw;
+
+    try{
+        raw = typeof data === "string" ? JSON.parse(data) : data;
+    }catch(e){
+        console.error("Parse error:", e);
+        raw = [];
+    }
+
+    const myId = localStorage.getItem("uuid");
+    const box = document.getElementById("chatMessages");
+
+    if(!box) return;
+
+    box.innerHTML = "";
+
+    if(!raw || raw.length === 0){
+        box.innerHTML = "<p style='opacity:.5'>No messages yet</p>";
+        return;
+    }
+
+    const msgs = Array.isArray(raw) ? raw : Object.values(raw);
+
+    msgs.sort((a,b)=>(a.timestamp||0)-(b.timestamp||0));
+
+   msgs.forEach(m=>{
+
+       console.log("MY ID:", myId);
+       console.log("MESSAGE SENDER:", m.senderId);
+
+       const cls = String(m.senderId) === String(myId)
+           ? "message-sent"
+           : "message-received";
+
+       box.innerHTML += `
+           <div class="message-row">
+               <div class="${cls}">
+                   ${m.text || ""}
+                   <div style="font-size:11px;opacity:.5">
+                       ${m.timestamp
+                         ? new Date(m.timestamp).toLocaleString()
+                         : ""}
+                   </div>
+               </div>
+           </div>
+       `;
+   });
+
+    box.scrollTop = box.scrollHeight;
+}
 
 function displayChatList(role, data){
+
     const list = JSON.parse(data);
     let html = `<h2>💬 Chat with ${role}s</h2>`;
 
     Object.keys(list).forEach(id=>{
-        let u=list[id];
+
+        let u = list[id];
+
+        console.log("USER ID:", id);
+
         html += `
         <div class="card" onclick="openPersonalChat('${id}','${role}')">
-            ${u.name} <br> <small>${u.email}</small>
+            ${u.name}<br>
+            <small>${u.email}</small>
         </div>`;
     });
 
-    content.innerHTML = html;
+    document.getElementById("content").innerHTML = html;
 }
 
 function openPersonalChat(id, role){
@@ -481,85 +539,32 @@ function openPersonalChat(id, role){
 
     document.getElementById("content").innerHTML = `
         <h3>💬 Chat with ${role.toUpperCase()}</h3>
-
         <div id="chatMessages" class="chat-container"></div>
 
         <div class="chat-input-area">
           <input id="chatInput" placeholder="Type a message..."/>
-          <button onclick="sendPersonalMessage('${id}')">➤</button>
+          <button onclick="sendPersonalMessage()">➤</button>
         </div>
     `;
 
-    // 🔁 Try both directions
-    loadPersonalChat(id);
-}
-function loadPersonalChat(otherId){
-    const myId = localStorage.getItem("uuid");
-
-    // First try management → trainee
-    AndroidBridge.getChatMessages(otherId);
-
-    // Fallback handler
-    window.displayChatMessages = function(data){
-        let msgs = JSON.parse(data || "[]");
-
-        if(!msgs || msgs.length === 0){
-            // Try reverse direction
-            AndroidBridge.getChatMessagesReverse(otherId);
-            return;
-        }
-
-        renderPersonalMessages(msgs);
-    };
-}
-function renderPersonalMessages(msgs){
-    let box = document.getElementById("chatMessages");
-    box.innerHTML = "";
-
-    msgs.forEach(m=>{
-        let cls = m.sender === "management"
-            ? "message-sent"
-            : "message-received";
-
-        box.innerHTML += `
-          <div class="message-row">
-            <div class="${cls}">
-              ${m.text}
-            </div>
-          </div>
-        `;
-    });
-
-    box.scrollTop = box.scrollHeight;
+    // 🔥 call correct Android function
+    AndroidBridge.getChatMessages(id);
 }
 
 
 
-function displayChatMessages(data) {
-    let msgs = JSON.parse(data);
-    let box = document.getElementById("chatMessages");
-    box.innerHTML = "";
+function sendPersonalMessage(){
 
-    msgs.forEach(m => {
-        let classname = m.sender === "management" ? "message-sent" : "message-received";
-        box.innerHTML += `
-           <div class="message-row"><div class="${classname}">${m.text}</div></div>
-        `;
-    });
+    const input = document.getElementById("chatInput");
+    if(!input) return;
 
-    box.scrollTop = box.scrollHeight;
-}
-
-
-function sendPersonalMessage(uid){
-    let txt = chatInput.value.trim();
+    const txt = input.value.trim();
     if(txt==="") return;
 
-    AndroidBridge.sendPersonalMessage(uid, txt);
-    chatInput.value = "";
+    AndroidBridge.sendPersonalMessage(currentChatUser, txt);
 
-    // Refresh
-    loadPersonalChat(uid);
+    input.value = "";
+    console.log("Current chat user:", currentChatUser);
 }
 
 

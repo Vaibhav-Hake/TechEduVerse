@@ -71,40 +71,46 @@ public class MainActivity extends AppCompatActivity {
 
 
     public class AndroidBridge {
-
-        @JavascriptInterface
-        public void sendPersonalMessage(String json) {
-            try {
-                JSONObject obj = new JSONObject(json);
-
-                String fromId = obj.getString("fromId");
-                String toId   = obj.getString("toId");
-
-                Map<String, Object> msg = new HashMap<>();
-                msg.put("sender", obj.getString("sender"));
-                msg.put("text", obj.getString("text"));
-                msg.put("timestamp", System.currentTimeMillis());
-
-                FirebaseDatabase.getInstance(
-                                "https://mydemofirebase-b58cd-default-rtdb.firebaseio.com/"
-                        )
-                        .getReference("personalChats")
-                        .child(fromId)
-                        .child(toId)
-                        .push()
-                        .setValue(msg);
-
-            } catch (Exception e) {
-                e.printStackTrace();
+        private String getRoomId(String user1, String user2){
+            if(user1.compareTo(user2) < 0){
+                return user1 + "_" + user2;
+            } else {
+                return user2 + "_" + user1;
             }
         }
+
         @JavascriptInterface
-        public void getPersonalChats(String fromId, String toId) {
+        public void sendPersonalMessage(String receiverId, String text){
+
+            String senderId = currentUserId;
+
+            String roomId = getRoomId(senderId, receiverId);
+
+            Log.d("CHAT_SEND_ROOM", roomId);
 
             DatabaseReference ref = FirebaseDatabase.getInstance()
                     .getReference("personalChats")
-                    .child(fromId)
-                    .child(toId);
+                    .child(roomId);
+
+            Map<String,Object> msg = new HashMap<>();
+            msg.put("senderId", senderId);
+            msg.put("text", text);
+            msg.put("timestamp", System.currentTimeMillis());
+
+            ref.push().setValue(msg);
+
+            Log.d("CHAT_SEND", "Sender: " + senderId + " Receiver: " + receiverId);
+        }
+        @JavascriptInterface
+        public void getChatMessages(String otherId){
+
+            String roomId = getRoomId(currentUserId, otherId);
+
+            Log.d("CHAT_ROOM", "Room: " + roomId); // debug
+
+            DatabaseReference ref = FirebaseDatabase.getInstance()
+                    .getReference("personalChats")
+                    .child(roomId);
 
             ref.addValueEventListener(new ValueEventListener() {
                 @Override
@@ -112,25 +118,27 @@ public class MainActivity extends AppCompatActivity {
 
                     JSONArray arr = new JSONArray();
 
-                    for (DataSnapshot snap : snapshot.getChildren()) {
-                        try {
+                    for(DataSnapshot s : snapshot.getChildren()){
+                        try{
                             JSONObject obj = new JSONObject();
-                            obj.put("sender", snap.child("sender").getValue(String.class));
-                            obj.put("text", snap.child("text").getValue(String.class));
-                            obj.put("timestamp", snap.child("timestamp").getValue(Long.class));
+                            obj.put("senderId", s.child("senderId").getValue(String.class));
+                            obj.put("text", s.child("text").getValue(String.class));
+                            obj.put("timestamp", s.child("timestamp").getValue(Long.class));
                             arr.put(obj);
-                        } catch (Exception ignored) {}
+                        }catch(Exception ignored){}
                     }
 
-                    String safe = JSONObject.quote(arr.toString());
-                    webView.evaluateJavascript("showPersonalChats("+safe+");", null);
+                    String js = "showPersonalChats(" + JSONObject.quote(arr.toString()) + ")";
+
+                    webView.post(() ->
+                            webView.evaluateJavascript(js, null)
+                    );
                 }
 
                 @Override
                 public void onCancelled(DatabaseError error) {}
             });
         }
-
         @JavascriptInterface
         public void getMyRequirements(String traineeId) {
 
@@ -666,38 +674,38 @@ public class MainActivity extends AppCompatActivity {
                     });
         }
 
-        @JavascriptInterface
-        public void sendPersonalMessage(String receiverId, String text){
-            String senderId = currentUserId;
-            DatabaseReference chatRef = FirebaseDatabase.getInstance()
-                    .getReference("personalChats")
-                    .child(senderId)
-                    .child(receiverId)
-                    .push();
-
-            chatRef.child("sender").setValue("management");
-            chatRef.child("text").setValue(text);
-            chatRef.child("timestamp").setValue(System.currentTimeMillis());
-        }
-        @JavascriptInterface
-        public void getChatMessages(String otherId){
-            String me = currentUserId;
-            DatabaseReference ref = FirebaseDatabase.getInstance()
-                    .getReference("personalChats").child(me).child(otherId);
-
-            ref.get().addOnSuccessListener(snapshot -> {
-                JSONArray arr = new JSONArray();
-                for(DataSnapshot s : snapshot.getChildren()){
-                    try{
-                        JSONObject m = new JSONObject();
-                        m.put("sender", s.child("sender").getValue(String.class));
-                        m.put("text", s.child("text").getValue(String.class));
-                        arr.put(m);
-                    } catch(Exception ignored){}
-                }
-                webView.evaluateJavascript("displayChatMessages('"+arr.toString()+"')", null);
-            });
-        }
+//        @JavascriptInterface
+//        public void sendPersonalMessage(String receiverId, String text){
+//            String senderId = currentUserId;
+//            DatabaseReference chatRef = FirebaseDatabase.getInstance()
+//                    .getReference("personalChats")
+//                    .child(senderId)
+//                    .child(receiverId)
+//                    .push();
+//
+//            chatRef.child("sender").setValue("management");
+//            chatRef.child("text").setValue(text);
+//            chatRef.child("timestamp").setValue(System.currentTimeMillis());
+//        }
+//        @JavascriptInterface
+//        public void getChatMessages(String otherId){
+//            String me = currentUserId;
+//            DatabaseReference ref = FirebaseDatabase.getInstance()
+//                    .getReference("personalChats").child(me).child(otherId);
+//
+//            ref.get().addOnSuccessListener(snapshot -> {
+//                JSONArray arr = new JSONArray();
+//                for(DataSnapshot s : snapshot.getChildren()){
+//                    try{
+//                        JSONObject m = new JSONObject();
+//                        m.put("sender", s.child("sender").getValue(String.class));
+//                        m.put("text", s.child("text").getValue(String.class));
+//                        arr.put(m);
+//                    } catch(Exception ignored){}
+//                }
+//                webView.evaluateJavascript("displayChatMessages('"+arr.toString()+"')", null);
+//            });
+//        }
 
         @JavascriptInterface
         public void getAllStudents(){
@@ -1279,6 +1287,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        android.webkit.WebView.setWebContentsDebuggingEnabled(true);
         setContentView(R.layout.activity_main);
         mAuth = FirebaseAuth.getInstance();
 
