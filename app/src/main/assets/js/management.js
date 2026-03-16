@@ -46,7 +46,7 @@ function removeBatch(id){
 function showEnrolledStudents(batchId, batchName){
     currentView = "enrolledStudents";
     document.getElementById("content").innerHTML = `<h3>Loading students for ${batchName}...</h3>`;
-
+ console.log("Batch Clicked:", batchId);
     // Fetch students from AndroidBridge
     if(AndroidBridge.getStudentsByBatch){
         AndroidBridge.getStudentsByBatch(batchId);
@@ -56,26 +56,56 @@ function showEnrolledStudents(batchId, batchName){
 }
 
 function displayEnrolledStudents(data){
+
     const students = JSON.parse(data || "{}");
 
     let html = `<h2>👥 Enrolled Students</h2>`;
+console.log("Received student data:", data);
     if(Object.keys(students).length === 0){
         html += `<p>No students enrolled yet.</p>`;
-    } else {
+    }
+    else{
+
         Object.keys(students).forEach(id=>{
+
             const s = students[id];
-            const name = s.traineeFullName || s.traineeName || "Unknown Student";
+
+            const name =
+                s.traineeFullName ||
+                s.traineeName ||
+                "Unknown Student";
+
+            const email = s.traineeEmail || "";
+
+            const photo = getSafeImage(s.traineePhoto);
 
             html += `
-            <div class="card">
-                <h3>${name}</h3>
-                <p>${s.traineeEmail || ''}</p>
-                <button onclick="openPersonalChat('${id}','student')">💬 Chat</button>
+            <div class="student-card">
+
+                <img src="${photo}" class="student-img"/>
+
+                <div class="student-info">
+                    <h3>${name}</h3>
+                    <p>${email}</p>
+                </div>
+
+                <div class="student-actions">
+                    <button onclick="openPersonalChat('${id}','student')">
+                        💬 Chat
+                    </button>
+
+                    <button onclick="viewStudent('${id}')">
+                        👁 View
+                    </button>
+                </div>
+
             </div>`;
         });
+
     }
 
-    html += `<button onclick="showHome()">⬅️ Back to Batches</button>`;
+    html += `<button onclick="showHome()">⬅ Back</button>`;
+
     document.getElementById("content").innerHTML = html;
 }
 

@@ -78,40 +78,29 @@ public class MainActivity extends AppCompatActivity {
                 return user2 + "_" + user1;
             }
         }
-
         @JavascriptInterface
         public void sendPersonalMessage(String receiverId, String text){
-
             String senderId = currentUserId;
-
             String roomId = getRoomId(senderId, receiverId);
-
             Log.d("CHAT_SEND_ROOM", roomId);
-
             DatabaseReference ref = FirebaseDatabase.getInstance()
                     .getReference("personalChats")
                     .child(roomId);
-
             Map<String,Object> msg = new HashMap<>();
             msg.put("senderId", senderId);
             msg.put("text", text);
             msg.put("timestamp", System.currentTimeMillis());
-
             ref.push().setValue(msg);
-
             Log.d("CHAT_SEND", "Sender: " + senderId + " Receiver: " + receiverId);
         }
+
         @JavascriptInterface
         public void getChatMessages(String otherId){
-
             String roomId = getRoomId(currentUserId, otherId);
-
             Log.d("CHAT_ROOM", "Room: " + roomId); // debug
-
             DatabaseReference ref = FirebaseDatabase.getInstance()
                     .getReference("personalChats")
                     .child(roomId);
-
             ref.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot snapshot) {
@@ -134,7 +123,6 @@ public class MainActivity extends AppCompatActivity {
                             webView.evaluateJavascript(js, null)
                     );
                 }
-
                 @Override
                 public void onCancelled(DatabaseError error) {}
             });
@@ -168,28 +156,20 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
-
-
-
         private Context context;
             private WebView webView;
-
             public AndroidBridge(Context context, WebView webView) {
                 this.context = context;
                 this.webView = webView;
             }
-
             /* ================= TRAINEE ID ================= */
-
             private String getTraineeId() {
                 SharedPreferences prefs =
                         context.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
 
                 return prefs.getString("uuid", null); // must be saved at login
             }
-
             /* ================= ENROLL BATCH ================= */
-
             @JavascriptInterface
             public void enrollBatch(String batchJson) {
                 try {
@@ -223,9 +203,7 @@ public class MainActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
             }
-
             /* ================= GET ENROLLED BATCHES ================= */
-
             @JavascriptInterface
             public void getEnrolledBatches() {
                 String traineeId = getTraineeId();
@@ -261,9 +239,7 @@ public class MainActivity extends AppCompatActivity {
                             public void onCancelled(@NonNull DatabaseError error) {}
                         });
             }
-
             /* ================= FILTER HOME BATCHES ================= */
-
         @JavascriptInterface
         public void filterHomeBatches(String allBatchesJson) {
             String traineeId = getTraineeId();
@@ -273,7 +249,6 @@ public class MainActivity extends AppCompatActivity {
                 );
                 return;
             }
-
             DatabaseReference enrollRef = FirebaseDatabase.getInstance()
                     .getReference("enrollments")
                     .child(traineeId);
@@ -297,7 +272,6 @@ public class MainActivity extends AppCompatActivity {
                                 result.put(b);
                             }
                         }
-
                         String safeJson = JSONObject.quote(result.toString());
                         webView.post(() ->
                                 webView.evaluateJavascript(
@@ -312,7 +286,6 @@ public class MainActivity extends AppCompatActivity {
                         );
                     }
                 }
-
                 @Override
                 public void onCancelled(@NonNull DatabaseError error) {
                     webView.post(() ->
@@ -321,43 +294,53 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
-
-
-
-
         @JavascriptInterface
-        public void getStudentsByBatch(String batchId) {
-            DatabaseReference ref = FirebaseDatabase.getInstance()
-                    .getReference("users/trainee");
+        public void getStudentsByBatch(String batchId){
 
-            ref.orderByChild("batchId").equalTo(batchId)
-                    .get().addOnSuccessListener(snapshot -> {
-                        JSONObject enrolledStudents = new JSONObject();
+            DatabaseReference ref = FirebaseDatabase
+                    .getInstance()
+                    .getReference("enrollments");
 
-                        for (DataSnapshot s : snapshot.getChildren()) {
-                            try {
-                                JSONObject studentData = new JSONObject();
-                                studentData.put("traineeFullName", s.child("traineeName").getValue(String.class));
-                                studentData.put("traineeEmail", s.child("traineeEmail").getValue(String.class));
-                                studentData.put("traineeId", s.getKey());
+            ref.addListenerForSingleValueEvent(new ValueEventListener(){
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot){
 
-                                enrolledStudents.put(s.getKey(), studentData);
-                            } catch (Exception e) {
-                                Log.e("GET_STUDENTS", e.getMessage());
+                    JSONObject result = new JSONObject();
+
+                    try{
+
+                        for(DataSnapshot studentSnap : snapshot.getChildren()){
+
+                            String studentId = studentSnap.getKey();
+
+                            if(studentSnap.hasChild(batchId)){
+
+                                DataSnapshot batchSnap = studentSnap.child(batchId);
+
+                                JSONObject obj = new JSONObject();
+                                obj.put("traineeFullName", studentId);
+                                obj.put("traineeEmail", "Enrolled Student");
+
+                                result.put(studentId, obj);
                             }
                         }
 
-                        String safeJson = JSONObject.quote(enrolledStudents.toString());
+                    }catch(Exception e){
+                        e.printStackTrace();
+                    }
 
-                        runOnUiThread(() ->
-                                webView.evaluateJavascript("displayEnrolledStudents(" + safeJson + ")", null)
+                    String json = result.toString();
+                    webView.post(() -> {
+                        webView.evaluateJavascript(
+                                "displayEnrolledStudents('" + json + "')",
+                                null
                         );
-                    }).addOnFailureListener(e -> {
-                        Log.e("GET_STUDENTS", e.getMessage());
                     });
+                }
+                @Override
+                public void onCancelled(@NonNull DatabaseError error){}
+            });
         }
-
-
         @JavascriptInterface
         public void getTrainerAssignedBatches(String trainerId){
             DatabaseReference ref = FirebaseDatabase.getInstance()
@@ -379,7 +362,6 @@ public class MainActivity extends AppCompatActivity {
                 );
             });
         }
-
         @JavascriptInterface
         public void getAllTrainersForManagement(){
             DatabaseReference ref = FirebaseDatabase.getInstance(
@@ -399,7 +381,6 @@ public class MainActivity extends AppCompatActivity {
 
                         obj.put(s.getKey(), t);
                     }
-
                     // ✅ SAFE JSON
                     String safeJson = JSONObject.quote(obj.toString());
 
@@ -413,7 +394,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
-
         @JavascriptInterface
         public void getSpecificTrainer(String trainerId){
             DatabaseReference ref = FirebaseDatabase.getInstance(
@@ -442,8 +422,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
-
-
         @JavascriptInterface
         public void getSpecificStudent(String studentId) {
             DatabaseReference ref = FirebaseDatabase.getInstance(
@@ -471,9 +449,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
-
-
-
         @JavascriptInterface
         public void getAllBatches() {
             DatabaseReference ref = FirebaseDatabase.getInstance(
@@ -533,21 +508,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
-//        @JavascriptInterface
-//        public void sendPersonalMessage(String partnerId, String text, String sender){
-//            FirebaseUser u = FirebaseAuth.getInstance().getCurrentUser();
-//            String myId = u.getUid();
-//
-//            MessageModel msg = new MessageModel(sender, text, System.currentTimeMillis());
-//
-//            FirebaseDatabase.getInstance()
-//                    .getReference("chats").child(myId).child(partnerId)
-//                    .push().setValue(msg);
-//
-//            FirebaseDatabase.getInstance()
-//                    .getReference("chats").child(partnerId).child(myId)
-//                    .push().setValue(msg);
-//        }
         @JavascriptInterface
         public void getGroupMessages(String batchId){
             DatabaseReference ref = FirebaseDatabase.getInstance()
@@ -583,9 +543,6 @@ public class MainActivity extends AppCompatActivity {
                 public void onCancelled(DatabaseError error) {}
             });
         }
-
-
-
         @JavascriptInterface
         public void sendGroupMessage(String batchId, String message, String senderRole){
             DatabaseReference ref = FirebaseDatabase.getInstance().getReference("batchChats").child(batchId);
@@ -600,14 +557,10 @@ public class MainActivity extends AppCompatActivity {
                     .addOnSuccessListener(a -> Log.d("CHAT", "Message Sent"))
                     .addOnFailureListener(e -> Log.e("CHAT", "Error: "+e.getMessage()));
         }
-
-
         public class MessageModel {
             public String from, text;
             public long timestamp;
-
             public MessageModel(){}
-
             public MessageModel(String f, String t, long time){
                 this.from = f;
                 this.text = t;
@@ -673,40 +626,6 @@ public class MainActivity extends AppCompatActivity {
                         });
                     });
         }
-
-//        @JavascriptInterface
-//        public void sendPersonalMessage(String receiverId, String text){
-//            String senderId = currentUserId;
-//            DatabaseReference chatRef = FirebaseDatabase.getInstance()
-//                    .getReference("personalChats")
-//                    .child(senderId)
-//                    .child(receiverId)
-//                    .push();
-//
-//            chatRef.child("sender").setValue("management");
-//            chatRef.child("text").setValue(text);
-//            chatRef.child("timestamp").setValue(System.currentTimeMillis());
-//        }
-//        @JavascriptInterface
-//        public void getChatMessages(String otherId){
-//            String me = currentUserId;
-//            DatabaseReference ref = FirebaseDatabase.getInstance()
-//                    .getReference("personalChats").child(me).child(otherId);
-//
-//            ref.get().addOnSuccessListener(snapshot -> {
-//                JSONArray arr = new JSONArray();
-//                for(DataSnapshot s : snapshot.getChildren()){
-//                    try{
-//                        JSONObject m = new JSONObject();
-//                        m.put("sender", s.child("sender").getValue(String.class));
-//                        m.put("text", s.child("text").getValue(String.class));
-//                        arr.put(m);
-//                    } catch(Exception ignored){}
-//                }
-//                webView.evaluateJavascript("displayChatMessages('"+arr.toString()+"')", null);
-//            });
-//        }
-
         @JavascriptInterface
         public void getAllStudents(){
             DatabaseReference ref = FirebaseDatabase.getInstance(
@@ -760,7 +679,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
-
         @JavascriptInterface
         public void addBatch(String batchId, String batchJson) {
             try {
@@ -788,7 +706,6 @@ public class MainActivity extends AppCompatActivity {
                 Log.e("ADD_BATCH_ERROR", e.getMessage());
             }
         }
-
         @JavascriptInterface
         public void addRequirement(String studentId, String json) {
             try {
@@ -819,9 +736,6 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }
-
-
-
         @JavascriptInterface
         public void getStudentRequirements(String studentId){
             DatabaseReference ref = FirebaseDatabase.getInstance()
@@ -844,7 +758,6 @@ public class MainActivity extends AppCompatActivity {
                         obj.put(s.getKey(), r);
                     }catch(Exception ignored){}
                 }
-
                 // 🔐 ESCAPE JSON (VERY IMPORTANT)
                 String json = obj.toString()
                         .replace("\\", "\\\\")
@@ -856,9 +769,6 @@ public class MainActivity extends AppCompatActivity {
                 );
             });
         }
-
-
-
         @JavascriptInterface
         public void getTrainerBatches(String trainerId){
             DatabaseReference ref = FirebaseDatabase.getInstance().getReference("batches");
@@ -917,9 +827,6 @@ public class MainActivity extends AppCompatActivity {
                 webView.evaluateJavascript("receiveTrainers('"+ trainerObj.toString() +"')", null);
             });
         }
-
-
-
         // ---------- SIGNUP / REGISTER ----------
         @JavascriptInterface
         public void uploadUserData(String userJson) {
@@ -992,9 +899,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
-
-
-
         // ---------- LOGIN ----------
         @JavascriptInterface
         public void loginUser(String loginJson) {
@@ -1034,7 +938,6 @@ public class MainActivity extends AppCompatActivity {
                                 break;
                             }
                         }
-
                         if (found) {
                             Toast.makeText(MainActivity.this, "Login successful.", Toast.LENGTH_SHORT).show();
 
@@ -1043,11 +946,9 @@ public class MainActivity extends AppCompatActivity {
                             // ✅ ALSO SAVE UUID FOR ANDROID BRIDGE (VERY IMPORTANT)
                             SharedPreferences prefs =
                                     getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
-
                             prefs.edit()
                                     .putString("uuid", currentUserId)
                                     .apply();
-
                             // Load separate dashboard for each role
                             String pageUrl = "file:///android_asset/dashbord.html";
                             if (role.equalsIgnoreCase("trainer")) {
@@ -1069,7 +970,6 @@ public class MainActivity extends AppCompatActivity {
                     }).addOnFailureListener(e ->
                             Toast.makeText(MainActivity.this, "Database connection failed.", Toast.LENGTH_SHORT).show()
                     );
-
                 } catch (Exception e) {
                     Log.e(TAG, "loginUser error", e);
                     Toast.makeText(MainActivity.this, "Login process failed.", Toast.LENGTH_SHORT).show();
@@ -1148,7 +1048,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
-
         // ---------- GET PROFILE ----------
         @JavascriptInterface
         public void getUserProfile(String role) {
@@ -1173,7 +1072,6 @@ public class MainActivity extends AppCompatActivity {
                 }).addOnFailureListener(e -> Toast.makeText(MainActivity.this, "Failed to fetch profile: " + e.getMessage(), Toast.LENGTH_SHORT).show());
             });
         }
-
         @JavascriptInterface
         public void sendOtp(String json) {
             runOnUiThread(() -> {
@@ -1279,10 +1177,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
-
-
     }
-
     // ------------------------- LIFECYCLE -------------------------
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -1290,20 +1185,16 @@ public class MainActivity extends AppCompatActivity {
         android.webkit.WebView.setWebContentsDebuggingEnabled(true);
         setContentView(R.layout.activity_main);
         mAuth = FirebaseAuth.getInstance();
-
-
         webView = findViewById(R.id.webview);
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
         settings.setAllowFileAccess(true);
         settings.setAllowContentAccess(true);
-
         if (checkSelfPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{android.Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
         }
-
         webView.setWebViewClient(new WebViewClient());
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
@@ -1312,7 +1203,6 @@ public class MainActivity extends AppCompatActivity {
                     MainActivity.this.filePathCallback.onReceiveValue(null);
                 }
                 MainActivity.this.filePathCallback = filePathCallback;
-
                 Intent intent = fileChooserParams.createIntent();
                 try {
                     startActivityForResult(intent, FILE_CHOOSER_REQUEST_CODE);
@@ -1324,11 +1214,8 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
         });
-
         webView.addJavascriptInterface(new AndroidBridge(this, webView), "AndroidBridge");
-
         webView.loadUrl("file:///android_asset/index1.html");
-
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true)
         { @Override
         public void handleOnBackPressed()
@@ -1336,8 +1223,6 @@ public class MainActivity extends AppCompatActivity {
             if (webView.canGoBack()) webView.goBack();
             else finish(); }
         });
-
-
 
     }
 

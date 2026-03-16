@@ -292,3 +292,39 @@ textarea {
     font-size: 0.85rem;
     color: #555;
 }
+.student-card{
+    display:flex;
+    align-items:center;
+    background:#fff;
+    padding:12px;
+    margin:10px 0;
+    border-radius:10px;
+    box-shadow:0 2px 5px rgba(0,0,0,0.1);
+}
+
+.student-img{
+    width:60px;
+    height:60px;
+    border-radius:50%;
+    object-fit:cover;
+    margin-right:15px;
+}
+
+.student-info{
+    flex:1;
+}
+
+.student-info h3{
+    margin:0;
+    font-size:18px;
+}
+
+.student-info p{
+    margin:3px 0;
+    font-size:13px;
+    color:#666;
+}
+
+.student-actions button{
+    margin-left:5px;
+}
