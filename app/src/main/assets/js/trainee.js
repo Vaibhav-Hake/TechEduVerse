@@ -482,6 +482,144 @@ function showResume() {
     `;
 }
 
+/* ================= mock Test ================= */
+
+function showMockTest() {
+    currentView = "mocktest";
+
+    document.getElementById("content").innerHTML = `
+        <h2>🧪 Mock Test Platform</h2>
+
+        <div class="level-select">
+            <button onclick="selectLevel('easy')">Easy</button>
+            <button onclick="selectLevel('medium')">Medium</button>
+            <button onclick="selectLevel('hard')">Hard</button>
+        </div>
+
+        <div class="grid">
+            <div class="card" onclick="startMock('HTML')">HTML</div>
+            <div class="card" onclick="startMock('CSS')">CSS</div>
+            <div class="card" onclick="startMock('JavaScript')">JavaScript</div>
+            <div class="card" onclick="startMock('Java')">Java</div>
+            <div class="card" onclick="startMock('Python')">Python</div>
+            <div class="card" onclick="startMock('DSA')">DSA</div>
+            <div class="card" onclick="startMock('Aptitude')">Aptitude</div>
+        </div>
+
+        <div id="mockArea"></div>
+    `;
+}
+const mockQuestions = {
+    Java: {
+        easy: [
+            { q: "JVM stands for?", options: ["Java Virtual Machine", "Java Variable Machine"], ans: 0 }
+        ],
+        medium: [
+            { q: "Which is not OOP?", options: ["Encapsulation", "Compilation"], ans: 1 }
+        ],
+        hard: [
+            { q: "Which memory stores objects?", options: ["Heap", "Stack"], ans: 0 }
+        ]
+    },
+
+    Aptitude: {
+        easy: [
+            { q: "5 + 5 = ?", options: ["10", "20"], ans: 0 }
+        ],
+        medium: [
+            { q: "20 * 2 = ?", options: ["30", "40"], ans: 1 }
+        ],
+        hard: [
+            { q: "100 / 4 = ?", options: ["25", "20"], ans: 0 }
+        ]
+    }
+};
+
+let timer;
+let timeLeft = 30;
+
+function startMock(domain) {
+    mqDomain = domain;
+    mqIndex = 0;
+    mqScore = 0;
+    timeLeft = 30;
+
+    startTimer();
+    loadMockQuestion();
+}
+function startTimer() {
+    clearInterval(timer);
+
+    timer = setInterval(() => {
+        timeLeft--;
+
+        document.getElementById("timerBox").innerText =
+            "⏱ Time Left: " + timeLeft + "s";
+
+        if (timeLeft <= 0) {
+            clearInterval(timer);
+            endMockTest();
+        }
+    }, 1000);
+}
+
+function loadMockQuestion() {
+
+    let qList = mockQuestions[mqDomain]?.[selectedLevel];
+
+    if (!qList) {
+        document.getElementById("mockArea").innerHTML = "No Questions";
+        return;
+    }
+
+    let q = qList[mqIndex];
+
+    let html = `
+        <div id="timerBox">⏱ Time Left: ${timeLeft}s</div>
+        <h3>${mqDomain} (${selectedLevel})</h3>
+        <p>${q.q}</p>
+    `;
+
+    q.options.forEach((opt, i) => {
+        html += `<button onclick="checkMockAnswer(${i})">${opt}</button><br><br>`;
+    });
+
+    document.getElementById("mockArea").innerHTML = html;
+}
+
+function checkMockAnswer(selected) {
+
+    let qList = mockQuestions[mqDomain][selectedLevel];
+    let q = qList[mqIndex];
+
+    if (selected === q.ans) {
+        mqScore++;
+    }
+
+    mqIndex++;
+
+    if (mqIndex < qList.length) {
+        loadMockQuestion();
+    } else {
+        endMockTest();
+    }
+}
+function endMockTest() {
+    clearInterval(timer);
+
+    document.getElementById("mockArea").innerHTML = `
+        <h2>🎉 Test Finished</h2>
+        <p>Score: ${mqScore}</p>
+        <button onclick="showMockTest()">Back</button>
+    `;
+}
+
+let selectedLevel = "easy";
+
+function selectLevel(level) {
+    selectedLevel = level;
+    alert("Selected Level: " + level.toUpperCase());
+}
 
 /* ================= LOGOUT ================= */
 function logout(){
