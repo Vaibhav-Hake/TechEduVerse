@@ -71,6 +71,129 @@ public class MainActivity extends AppCompatActivity {
 
 
     public class AndroidBridge {
+
+        //mock test
+
+
+
+        @JavascriptInterface
+        public void updateLeaderboard(int score){
+
+            DatabaseReference ref = FirebaseDatabase.getInstance()
+                    .getReference("leaderboard")
+                    .child(currentUserId)
+                    .child("score");
+
+            ref.get().addOnSuccessListener(snapshot -> {
+
+                long oldScore = 0;
+                if(snapshot.exists()){
+                    oldScore = snapshot.getValue(Long.class);
+                }
+
+                long newScore = oldScore + score;
+
+                ref.setValue(newScore);
+            });
+        }
+
+        @JavascriptInterface
+        public void getLeaderboard(){
+
+            DatabaseReference ref = FirebaseDatabase.getInstance()
+                    .getReference("leaderboard");
+
+            ref.get().addOnSuccessListener(snapshot -> {
+
+                JSONArray arr = new JSONArray();
+
+                for(DataSnapshot s : snapshot.getChildren()){
+                    try{
+                        JSONObject obj = new JSONObject();
+                        obj.put("user", s.getKey());
+                        obj.put("score", s.child("score").getValue());
+                        arr.put(obj);
+                    }catch(Exception ignored){}
+                }
+
+                webView.evaluateJavascript(
+                        "showLeaderboard('"+arr.toString()+"')",
+                        null
+                );
+            });
+        }
+
+        @JavascriptInterface
+        public void saveMockResult(String domain, String level, int score){
+
+            String userId = currentUserId;
+
+            DatabaseReference ref = FirebaseDatabase.getInstance()
+                    .getReference("mockTests")
+                    .child(userId)
+                    .push(); // ✅ allow multiple attempts
+
+            Map<String,Object> data = new HashMap<>();
+            data.put("domain", domain);
+            data.put("score", score);
+            data.put("level", level);
+            data.put("timestamp", System.currentTimeMillis());
+
+            ref.setValue(data);
+
+            // ✅ ALSO UPDATE LEADERBOARD
+            updateLeaderboard(score);
+
+            Log.d("MOCK_SAVE", "Saved");
+        }
+
+        @JavascriptInterface
+        public void saveCodingSubmission(String problemId, String code, String lang, String result){
+
+            String userId = currentUserId;
+
+            DatabaseReference ref = FirebaseDatabase.getInstance()
+                    .getReference("codingSubmissions")
+                    .child(userId)
+                    .child(problemId)
+                    .push();
+
+            Map<String,Object> map = new HashMap<>();
+            map.put("code", code);
+            map.put("language", lang);
+            map.put("result", result);
+            map.put("timestamp", System.currentTimeMillis());
+
+            ref.setValue(map);
+
+            Log.d("CODE_SAVE", "Submission Saved");
+        }
+
+        @JavascriptInterface
+        public void getMockHistory(){
+
+            String userId = currentUserId;
+
+            DatabaseReference ref = FirebaseDatabase.getInstance()
+                    .getReference("mockTests")
+                    .child(userId);
+
+            ref.get().addOnSuccessListener(snapshot -> {
+
+                JSONObject obj = new JSONObject();
+
+                for(DataSnapshot s : snapshot.getChildren()){
+                    try{
+                        obj.put(s.getKey(), new JSONObject(new Gson().toJson(s.getValue())));
+                    }catch(Exception ignored){}
+                }
+
+                webView.evaluateJavascript(
+                        "showMockHistory('" + obj.toString() + "')",
+                        null
+                );
+            });
+        }
         private String getRoomId(String user1, String user2){
             if(user1.compareTo(user2) < 0){
                 return user1 + "_" + user2;

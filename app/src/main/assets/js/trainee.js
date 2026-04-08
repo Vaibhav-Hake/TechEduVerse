@@ -607,12 +607,21 @@ function checkMockAnswer(selected) {
 function endMockTest() {
     clearInterval(timer);
 
+    // 🔥 SAVE TO FIREBASE
+    if (window.AndroidBridge) {
+        AndroidBridge.saveMockResult(mqDomain, selectedLevel, mqScore);
+    }
+
     document.getElementById("mockArea").innerHTML = `
         <h2>🎉 Test Finished</h2>
         <p>Score: ${mqScore}</p>
         <button onclick="showMockTest()">Back</button>
     `;
+    AndroidBridge.updateLeaderboard(mqScore);
 }
+let mqDomain = "";
+let mqIndex = 0;
+let mqScore = 0;
 
 let selectedLevel = "easy";
 
@@ -621,10 +630,283 @@ function selectLevel(level) {
     alert("Selected Level: " + level.toUpperCase());
 }
 
+function openCodingTest() {
+    document.getElementById("content").innerHTML = `
+        <h2>💻 Coding Test Platform</h2>
+
+        <div class="grid">
+            <div class="card" onclick="loadDomain('DSA')">🧠 DSA</div>
+            <div class="card" onclick="loadDomain('Java')">☕ Java</div>
+            <div class="card" onclick="loadDomain('Python')">🐍 Python</div>
+            <div class="card" onclick="loadDomain('Number')">🔢 Number Programming</div>
+        </div>
+
+        <div id="problemList"></div>
+    `;
+}
+async function runCode(problemId) {
+
+    const code = document.getElementById("codeEditor").value;
+    const lang = document.getElementById("lang").value;
+
+    let language_id = 62; // Java
+    if (lang === "python") language_id = 71;
+
+    try {
+        const response = await fetch("https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=false&wait=true", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-RapidAPI-Key": "YOUR_API_KEY", // ⚠️ replace
+                "X-RapidAPI-Host": "judge0-ce.p.rapidapi.com"
+            },
+            body: JSON.stringify({
+                source_code: code,
+                language_id: language_id
+            })
+        });
+
+        const data = await response.json();
+
+        let result = data.stdout || data.stderr || data.compile_output || "No Output";
+
+        document.getElementById("outputBox").innerHTML =
+            "<pre>" + result + "</pre>";
+
+        // SAVE
+        if (window.AndroidBridge) {
+            AndroidBridge.saveCodingSubmission(problemId, code, lang, result);
+        }
+
+    } catch (err) {
+        document.getElementById("outputBox").innerHTML =
+            "<pre>Error running code</pre>";
+    }
+}
+function openProblem(id){
+
+    const problem = dsaProblems.find(p => p.id === id);
+
+    if(!problem){
+        alert("Problem not found");
+        return;
+    }
+
+    document.getElementById("content").innerHTML = `
+        <h2>${problem.title}</h2>
+        <p>${problem.description || "Solve this problem"}</p>
+
+        <textarea id="codeEditor">// write code</textarea>
+        <button onclick="runCode()">Run</button>
+    `;
+}
+function showLeaderboard(data){
+
+    let arr = [];
+
+    try{
+        arr = JSON.parse(data);
+    }catch(e){
+        console.error("Leaderboard parse error", e);
+    }
+
+    if(!arr || arr.length === 0){
+        document.getElementById("content").innerHTML =
+            "<h2>🏆 Leaderboard</h2><p>No data</p>";
+        return;
+    }
+
+    arr.sort((a,b)=> (b.score||0) - (a.score||0));
+
+    let html = "<h2>🏆 Leaderboard</h2>";
+
+    arr.forEach((u,i)=>{
+        html += `
+            <div class="card">
+                <h3>#${i+1} ${u.user}</h3>
+                <p>Score: ${u.score || 0}</p>
+            </div>
+        `;
+    });
+
+    document.getElementById("content").innerHTML = html;
+}
+
+async function loadOnlineProblems() {
+
+    document.getElementById("problemList").innerHTML = "Loading problems...";
+
+    try {
+        const res = await fetch("https://codeforces.com/api/problemset.problems");
+        const data = await res.json();
+
+        const problems = data.result.problems.slice(0, 20); // limit 20
+
+        let html = "<h3>🌐 Online Problems</h3>";
+
+        problems.forEach(p => {
+            html += `
+                <div class="card" onclick="openOnlineProblem('${p.contestId}','${p.index}')">
+                    <h3>${p.name}</h3>
+                    <p>Rating: ${p.rating || "N/A"}</p>
+                    <p>Tags: ${(p.tags || []).join(", ")}</p>
+                </div>
+            `;
+        });
+
+        document.getElementById("problemList").innerHTML = html;
+
+    } catch (e) {
+        document.getElementById("problemList").innerHTML = "Failed to load problems";
+    }
+}
+function openOnlineProblem(contestId, index) {
+
+    const url = `https://codeforces.com/problemset/problem/${contestId}/${index}`;
+
+    document.getElementById("content").innerHTML = `
+        <h2>🧠 Solve Problem</h2>
+
+        <a href="${url}" target="_blank">👉 Open Problem Statement</a>
+
+        <select id="lang">
+            <option value="java">Java</option>
+            <option value="python">Python</option>
+        </select>
+
+        <textarea id="codeEditor" style="height:200px;">
+// Write your code here
+        </textarea>
+
+        <button onclick="runCode('online_problem')">▶ Run Code</button>
+
+        <div id="outputBox"></div>
+    `;
+}
+function openCodingTest() {
+    document.getElementById("content").innerHTML = `
+        <h2>💻 Coding Test Platform</h2>
+
+        <button onclick="loadOnlineProblems()">🌐 Load Online Problems</button>
+
+        <div id="problemList"></div>
+    `;
+}
+
+function showDSAProblems(){
+
+    let html = "<h2>🧠 DSA Problems</h2>";
+
+    dsaProblems.forEach(p=>{
+        html += `
+            <div class="card" onclick="openProblem('${p.id}')">
+                <h3>${p.title}</h3>
+                <p>${p.difficulty}</p>
+            </div>
+        `;
+    });
+
+    document.getElementById("content").innerHTML = html;
+}
+
+function showAnalytics(data){
+
+    let obj = {};
+
+    try{
+        obj = JSON.parse(data);
+    }catch(e){
+        console.error("Analytics parse error");
+    }
+
+    let total = 0;
+    let count = 0;
+
+    Object.values(obj).forEach(t=>{
+        total += Number(t.score || 0); // ✅ FIX
+        count++;
+    });
+
+    let avg = count ? (total / count).toFixed(2) : 0;
+
+    document.getElementById("content").innerHTML = `
+        <h2>📈 Performance</h2>
+        <p>Total Tests: ${count}</p>
+        <p>Average Score: ${avg}</p>
+    `;
+}
+
+function showMockHistory(data){
+
+    let obj = JSON.parse(data);
+    let html = "<h2>📊 My Performance</h2>";
+
+    Object.keys(obj).forEach(k=>{
+        let t = obj[k];
+
+        html += `
+            <div class="card">
+                <h3>${t.domain || "Test"}</h3>
+                <p>Score: ${t.score}</p>
+                <p>Level: ${t.level}</p>
+            </div>
+        `;
+    });
+
+    document.getElementById("content").innerHTML = html;
+}
+
+function loadDomain(domain) {
+
+    let list = codingProblems[domain];
+
+    let html = `<h3>📘 ${domain} Problems</h3>`;
+
+    list.forEach(p => {
+        html += `
+            <div class="card" onclick="openProblem('${domain}','${p.id}')">
+                <h3>${p.title}</h3>
+                <p>${p.desc}</p>
+            </div>
+        `;
+    });
+
+    document.getElementById("problemList").innerHTML = html;
+}
+function openProblem(domain, id) {
+
+    const problem = codingProblems[domain].find(p => p.id === id);
+
+    document.getElementById("content").innerHTML = `
+        <h2>${problem.title}</h2>
+        <p>${problem.desc}</p>
+
+        <select id="lang">
+            <option value="java">Java</option>
+            <option value="python">Python</option>
+        </select>
+
+        <textarea id="codeEditor" style="height:200px;">
+// Write your code here
+        </textarea>
+
+        <button onclick="runCode('${id}')">▶ Run Code</button>
+
+        <div id="outputBox"></div>
+    `;
+}
+
 /* ================= LOGOUT ================= */
 function logout(){
     if(confirm("⚠️ Are you sure you want to logout?")){
         localStorage.clear();
         location.href = "index1.html";
     }
+}
+function toggleSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    const content = document.querySelector(".content-area");
+
+    sidebar.classList.toggle("closed");
+    content.classList.toggle("full");
 }
