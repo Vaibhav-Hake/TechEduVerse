@@ -700,6 +700,15 @@ function logout(){
 
 
 /* ================= SIDEBAR TOGGLE ================= */
-document.addEventListener("DOMContentLoaded", ()=>{
-    menuBtn.addEventListener("click",()=> sidebar.classList.toggle("closed"));
-});
+function toggleSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    const content = document.querySelector(".content-area");
+
+    if (sidebar.classList.contains("closed")) {
+        sidebar.classList.remove("closed");
+        content.classList.remove("full");
+    } else {
+        sidebar.classList.add("closed");
+        content.classList.add("full");
+    }
+}

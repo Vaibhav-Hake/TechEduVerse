@@ -907,6 +907,11 @@ function toggleSidebar() {
     const sidebar = document.getElementById("sidebar");
     const content = document.querySelector(".content-area");
 
-    sidebar.classList.toggle("closed");
-    content.classList.toggle("full");
+    if (sidebar.classList.contains("closed")) {
+        sidebar.classList.remove("closed");
+        content.classList.remove("full");
+    } else {
+        sidebar.classList.add("closed");
+        content.classList.add("full");
+    }
 }

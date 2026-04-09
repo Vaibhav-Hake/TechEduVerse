@@ -6,47 +6,50 @@
   font-family: "Poppins", sans-serif;
 }
 
-/* Background animation */
+/* ===========================
+   DARK BACKGROUND (MATCH DASHBOARD)
+=========================== */
 body {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(-45deg, #1e3c72, #2a5298, #673ab7, #512da8);
-  background-size: 400% 400%;
-  animation: gradientShift 10s ease infinite;
+
+  background: linear-gradient(135deg, #020617, #0f172a, #1e40af);
+  color: #e2e8f0;
 }
 
-@keyframes gradientShift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-/* Container */
+/* ===========================
+   CONTAINER (GLASS DARK)
+=========================== */
 .login-container {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(15, 23, 42, 0.85);
   backdrop-filter: blur(15px);
+
   border-radius: 25px;
   padding: 40px 35px;
   text-align: center;
   width: 350px;
-  color: #fff;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+
+  color: #e2e8f0;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
 
 h1 {
   font-size: 2.2rem;
   margin-bottom: 10px;
+  color: #f8fafc;
 }
 
 .subtitle {
   font-size: 1rem;
   margin-bottom: 20px;
-  opacity: 0.9;
+  color: #94a3b8;
 }
 
-/* Role buttons */
+/* ===========================
+   ROLE BUTTONS
+=========================== */
 .role-selection {
   display: flex;
   justify-content: space-between;
@@ -56,78 +59,103 @@ h1 {
 
 .role-btn {
   flex: 1;
-  background: rgba(255, 255, 255, 0.2);
+
+  background: rgba(255, 255, 255, 0.08);
   border: none;
+
   border-radius: 12px;
   padding: 10px 5px;
-  color: #fff;
+
+  color: #cbd5e1;
   font-weight: 500;
+
   cursor: pointer;
   transition: 0.3s ease;
 }
 
-.role-btn:hover, .role-btn.active {
-  background: #ffda79;
-  color: #333;
+.role-btn:hover,
+.role-btn.active {
+  background: linear-gradient(135deg, #38bdf8, #6366f1);
+  color: #020617;
   transform: scale(1.05);
 }
 
-/* Form fields */
+/* ===========================
+   INPUT FIELDS
+=========================== */
 input {
   width: 100%;
   padding: 10px;
   margin: 8px 0;
+
   border-radius: 8px;
-  border: none;
+  border: 1px solid #334155;
+
+  background: rgba(15,23,42,0.9);
+  color: #f8fafc;
+
   outline: none;
   font-size: 1rem;
 }
 
+/* ===========================
+   LOGIN BUTTON
+=========================== */
 .login-btn {
   width: 100%;
   padding: 10px;
   margin-top: 15px;
+
   border: none;
   border-radius: 8px;
-  background: #fff;
-  color: #333;
+
+  background: linear-gradient(135deg, #38bdf8, #6366f1);
+  color: white;
+
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .login-btn:hover {
-  background: #333;
-  color: #fff;
   transform: scale(1.05);
+  box-shadow: 0 0 10px #38bdf8;
 }
 
+/* ===========================
+   BACK LINK
+=========================== */
 .back-link {
   margin-top: 15px;
 }
 
 .back-link a {
-  color: #ffda79;
+  color: #38bdf8;
   text-decoration: none;
-  transition: 0.3s;
 }
 
 .back-link a:hover {
   text-decoration: underline;
 }
-/* === Forgot Password Section Styling === */
 
+/* ===========================
+   RESET PASSWORD (DARK)
+=========================== */
 #resetContainer {
   margin-top: 20px;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+
+  background: rgba(15,23,42,0.9);
+  border: 1px solid rgba(255,255,255,0.1);
+
   border-radius: 14px;
   padding: 25px;
   width: 90%;
   max-width: 380px;
+
   text-align: center;
-  color: #fff;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  color: #e2e8f0;
+
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
   animation: fadeInPopup 0.3s ease forwards;
 }
 
@@ -135,48 +163,48 @@ input {
   margin-bottom: 15px;
   font-size: 20px;
   font-weight: 600;
+  color: #f8fafc;
 }
 
 #resetContainer input {
-  width: 100%;
-  margin: 8px 0;
-  padding: 10px;
-  border-radius: 8px;
-  border: none;
-  outline: none;
-  font-size: 15px;
-  color: #333;
+  background: rgba(15,23,42,0.95);
+  border: 1px solid #334155;
+  color: #f8fafc;
 }
 
 #resetContainer button {
   width: 100%;
   padding: 10px;
   margin-top: 10px;
-  background: linear-gradient(45deg, #4a00e0, #8e2de2);
+
+  background: linear-gradient(135deg, #38bdf8, #6366f1);
   border: none;
   border-radius: 8px;
+
   color: #fff;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  transition: 0.3s;
 }
 
 #resetContainer button:hover {
   transform: scale(1.03);
-  box-shadow: 0 0 8px rgba(142, 45, 226, 0.5);
+  box-shadow: 0 0 8px #38bdf8;
 }
 
 #resetContainer a {
-  color: #fff;
+  color: #38bdf8;
   text-decoration: underline;
-  font-size: 14px;
 }
 
 #resetContainer a:hover {
-  color: #e0e0e0;
+  color: #7dd3fc;
 }
 
-/* Smooth fade animation */
+/* ===========================
+   ANIMATION (UNCHANGED)
+=========================== */
 @keyframes fadeInPopup {
   from {
     opacity: 0;

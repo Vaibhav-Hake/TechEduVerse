@@ -11,6 +11,7 @@
 <body>
 
 <div class="dashboard-container">
+    <button id="sidebarToggle" onclick="toggleSidebar()">☰</button>
 
     <!-- SIDE MENU -->
     <aside class="sidebar" id="sidebar">
@@ -45,11 +46,7 @@
 
 <script src="file:///android_asset/js/management.js"></script>
 
-<script>
-    document.getElementById("menuBtn").addEventListener("click", () => {
-        document.getElementById("sidebar").classList.toggle("closed");
-    });
-</script>
+
 
 </body>
 </html>
