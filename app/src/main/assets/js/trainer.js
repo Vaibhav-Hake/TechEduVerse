@@ -135,142 +135,149 @@ function sendGroupMsg(){
 }
 
 /* ========= 💬 PERSONAL CHAT ========= */
-function showPersonalChat(){
-  currentView = "personalChatMain";
-  document.getElementById("content").innerHTML = `
-    <h2>📱 Personal Chat</h2>
-    <button onclick="loadManagement()">Chat with Management</button>
-    <br><br>
-    <button onclick="loadStudents()">Chat with Students</button>
-  `;
+function showMessages() {
+    currentView = "messages";
+
+    document.getElementById("content").innerHTML = `
+        <h2>💬 Messages</h2>
+
+        <div class="card" onclick="openManagementChat()">
+            <h3>🏢 Chat with Management</h3>
+            <p>Direct messages with management</p>
+        </div>
+
+        <div class="card" onclick="openTrainerChat()">
+            <h3>🎓 Chat with Trainer</h3>
+            <p>Direct messages with trainer</p>
+        </div>
+    `;
 }
 
-function loadManagement(){
-  chattingWithRole = "management"; // important
-  currentView = "personalChat";
-  AndroidBridge.getUsersByRole("management");
+function openManagementChat(){
+    const managementId = "81e90a7f-8045-481f-8a6e-620a395eec47"; // real management UUID
+    openPersonalChat(managementId, "management");
 }
 
-function loadStudents(){
-  chattingWithRole = "trainee"; // important
-  currentView = "personalChat";
-  AndroidBridge.getUsersByRole("trainee");
+function openChatList(role){
+    currentView = "chatList";
+    document.getElementById("content").innerHTML = `<h3>Loading list...</h3>`;
+    AndroidBridge.getUsersByRole(role);
 }
 
 
 
 
 // UNIVERSAL CHAT LIST HANDLER (SAFE)
-function displayChatList(arg1, arg2){
-  let data, role;
+let currentChatTo = "";
+let currentChatRole = "";
 
-  // Case 1: Android sent (role, data)
-  if(typeof arg1 === "string" && arg2){
-    role = arg1;
-    data = arg2;
-  }
-  // Case 2: Android sent only (data)
-  else{
-    role = chattingWithRole;
-    data = arg1;
-  }
-
-  const list = JSON.parse(data || "{}");
-
-  let title =
-    role === "management" ? "Management" : "Students";
-
-  let html = `<h2>💬 Chat with ${title}</h2>`;
-
-  if(Object.keys(list).length === 0){
-    html += `<p>No users found</p>`;
-  }
-
-  Object.keys(list).forEach(id => {
-    const u = list[id];
-
-    const name =
-      u.mFullName ||
-      u.tFullName ||
-      u.traineeFullName ||
-      u.name ||
-      "Unknown";
-
-    html += `
-      <div class="card"
-           onclick="openPersonalChat('${id}','${role}')">
-        ${name}
-      </div>
-    `;
-  });
-
-  document.getElementById("content").innerHTML = html;
-}
-
-
+/* ================= OPEN PERSONAL CHAT ================= */
 function openPersonalChat(id, role){
-  chatPartner = id;
-  chattingWithRole = role;
-  currentView = "personalChatWindow";
 
-  document.getElementById("content").innerHTML = `
-    <h3>💬 Chat</h3>
-    <div id="chatMessages"
-         style="height:300px;overflow:auto;padding:10px;background:white;border-radius:10px;">
-    </div>
+    currentChatUser = id;
+    currentChatRole = role;
 
-    <div style="margin-top:10px;display:flex;gap:5px;">
-      <input id="chatInput"
-             placeholder="Type a message..."
-             style="flex:1;padding:8px;border-radius:6px;border:1px solid #bcd4ff;">
-      <button onclick="sendPersonalMessage()">➤</button>
-    </div>
-  `;
+    console.log("Opening chat with:", id);   // DEBUG
+    console.log("My ID:", localStorage.getItem("uuid")); // DEBUG
 
-  AndroidBridge.getChatMessages(id);
+    document.getElementById("content").innerHTML = `
+        <h3>💬 Chat with ${role.toUpperCase()}</h3>
+        <div id="chatMessages" class="chat-container"></div>
+
+        <div class="chat-input-area">
+          <input id="chatInput" placeholder="Type a message..."/>
+          <button onclick="sendPersonalMessage()">➤</button>
+        </div>
+    `;
+
+    AndroidBridge.getChatMessages(id);
 }
 
-function displayChatMessages(data){
-  const msgsObj = JSON.parse(data || "{}");
-  const box = document.getElementById("chatMessages");
-  box.innerHTML = "";
+/* ================= DISPLAY MESSAGES ================= */
+function showPersonalChats(data){
 
-  const msgs = Object.values(msgsObj)
-    .sort((a,b)=>(a.timestamp||0)-(b.timestamp||0));
+    let raw;
 
-  msgs.forEach(m => {
-    const from = (m.from || "").toLowerCase().trim();
+    try{
+        raw = typeof data === "string" ? JSON.parse(data) : data;
+    }catch(e){
+        console.error("Parse error:", e);
+        raw = {};
+    }
 
-    const align = from === myRole ? "right" : "left";
-    const bg    = from === myRole ? "#dbe9ff" : "#f1f1f1";
+    const myId = localStorage.getItem("uuid");
+    const box = document.getElementById("chatMessages");
 
-    box.innerHTML += `
-      <div style="text-align:${align};margin:6px 0;">
-        <span style="display:inline-block;
-                     padding:8px 12px;
-                     border-radius:12px;
-                     background:${bg};
-                     max-width:70%;">
-          ${m.text}
-        </span>
-      </div>`;
-  });
+    if(!box) return;
 
-  box.scrollTop = box.scrollHeight;
+    box.innerHTML = "";
+
+    if(!raw || Object.keys(raw).length === 0){
+        box.innerHTML = "<p style='opacity:.5'>No messages yet</p>";
+        return;
+    }
+
+    // 🔥 Convert OBJECT → ARRAY
+    const msgs = Object.values(raw);
+
+    msgs.sort((a,b)=>(a.timestamp||0)-(b.timestamp||0));
+
+    msgs.forEach(m=>{
+
+        const cls = m.senderId === myId
+            ? "message-sent"
+            : "message-received";
+
+        box.innerHTML += `
+            <div class="message-row">
+                <div class="${cls}">
+                    ${m.text || ""}
+                    <div style="font-size:11px;opacity:.5">
+                        ${m.timestamp
+                          ? new Date(m.timestamp).toLocaleString()
+                          : ""}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    box.scrollTop = box.scrollHeight;
 }
+function displayChatList(role, data){
 
+    const list = JSON.parse(data);
+    let html = `<h2>💬 Chat with ${role}s</h2>`;
+
+    Object.keys(list).forEach(id=>{
+
+        let u = list[id];
+
+        console.log("USER ID:", id);
+
+        html += `
+        <div class="card" onclick="openPersonalChat('${id}','${role}')">
+            ${u.name}<br>
+            <small>${u.email}</small>
+        </div>`;
+    });
+
+    document.getElementById("content").innerHTML = html;
+}
+/* ================= SEND MESSAGE ================= */
 function sendPersonalMessage(){
-  const txt = document.getElementById("chatInput").value.trim();
-  if(!txt) return;
 
-  AndroidBridge.sendPersonalMessage(
-    chatPartner,
-    txt,
-    myRole          // 👈 FIXED
-  );
+    const input = document.getElementById("chatInput");
+    if(!input) return;
 
-  document.getElementById("chatInput").value = "";
-  AndroidBridge.getChatMessages(chatPartner);
+    const txt = input.value.trim();
+    if(txt==="") return;
+
+    console.log("Sending to:", currentChatUser);
+
+    AndroidBridge.sendPersonalMessage(currentChatUser, txt);
+
+    input.value="";
 }
 
 /* ========= 📌 REQUIREMENT ========= */
@@ -341,8 +348,3 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.addEventListener("click",()=> sidebar.classList.toggle("closed"));
   }
 });
-
-
-
-
-

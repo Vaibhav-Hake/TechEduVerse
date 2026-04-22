@@ -290,16 +290,10 @@ function openManagementChat(){
     const managementId = "81e90a7f-8045-481f-8a6e-620a395eec47"; // real management UUID
     openPersonalChat(managementId, "management");
 }
-function openTrainerChat(){
-
-    //const trainerId = localStorage.getItem("trainerId");
-
-    if(!trainerId){
-        alert("Trainer not assigned yet");
-        return;
-    }
-
-    openPersonalChat(trainerId, "trainer");
+function openChatList(role){
+    currentView = "chatList";
+    document.getElementById("content").innerHTML = `<h3>Loading list...</h3>`;
+    AndroidBridge.getUsersByRole(role);
 }
 /* ================= GLOBAL ================= */
 let currentChatTo = "";
@@ -393,7 +387,26 @@ function sendPersonalMessage(){
 
     input.value="";
 }
+function displayChatList(role, data){
 
+    const list = JSON.parse(data);
+    let html = `<h2>💬 Chat with ${role}s</h2>`;
+
+    Object.keys(list).forEach(id=>{
+
+        let u = list[id];
+
+        console.log("USER ID:", id);
+
+        html += `
+        <div class="card" onclick="openPersonalChat('${id}','${role}')">
+            ${u.name}<br>
+            <small>${u.email}</small>
+        </div>`;
+    });
+
+    document.getElementById("content").innerHTML = html;
+}
 
 /* ================= REQUIREMENTS ================= */
 function showRequirements() {
