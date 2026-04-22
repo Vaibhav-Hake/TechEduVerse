@@ -1,172 +1,181 @@
-body{
-    margin:0;
-    font-family: Poppins, sans-serif;
-    background:#eef5ff;
+/* 🔥 GLOBAL DARK UI */
+html, body, .app-wrapper, #content, .content-area {
+    background: transparent !important;
 }
 
-.dashboard-container{
-    display:flex;
+/* If ANY div is adding white bg */
+div {
+    background-color: transparent;
+}
+body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #020617, #0f172a, #1e40af);
+    color: #e2e8f0;
 }
 
-.sidebar{
-    width:230px;
-    background:#0057d9;
-    height:100vh;
-    color:white;
-    padding:20px 10px;
-    position:fixed;
-    transition:.3s;
+/* Remove any white overlay */
+html, body {
+    background-color: #020617 !important;
 }
 
-.sidebar.closed{left:-230px;}
-
-.sidebar h2{text-align:center;font-size:1.3rem;margin-bottom:20px;}
-.sidebar a{
-    display:block;
-    padding:12px;
-    color:white;
-    background:rgba(255,255,255,0.12);
-    text-decoration:none;
-    margin:10px 0;
-    border-radius:8px;
-}
-.sidebar a:hover{
-    background:rgba(255,255,255,0.35);
-    transform:translateX(5px);
+/* Container */
+.dashboard-container {
+    display: flex;
 }
 
-.main-area{
-    margin-left:230px;
-    padding-top:60px;
-    width:100%;
-}
-.sidebar.closed ~ .main-area{margin-left:0;}
-
-.topbar{
-    height:55px;
-    background:white;
-    display:flex;
-    align-items:center;
-    padding:0 15px;
-    position:fixed;
-    width:100%;
-    box-shadow:0 2px 8px rgba(0,0,0,0.1);
-}
-#menuBtn{
-    font-size:25px;
-    background:none;
-    border:none;
-    color:#0057d9;
+/* ================= SIDEBAR ================= */
+.sidebar {
+    width: 230px;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background: rgba(15,23,42,0.95);
+    padding: 15px;
+    transition: transform 0.3s ease;
+    z-index: 1000;
 }
 
-#content{padding:25px;}
-
-.card{
-    background:white;
-    padding:15px;
-    border-radius:10px;
-    margin-bottom:18px;
-    box-shadow:0 3px 12px rgba(0,0,0,0.1);
+.sidebar.closed {
+    transform: translateX(-100%);
 }
 
-.input, textarea, select{
-    width:100%;
-    padding:10px;
-    border:1px solid #bcd4ff;
-    margin-bottom:12px;
-    border-radius:8px;
-}
-button{
-    background:#0057d9;
-    padding:10px 15px;
-    border:none;
-    color:white;
-    border-radius:6px;
-}
-.profileCard h3 {
-    color: #0057d9;
-    margin-top: 10px;
-}
-.profileCard p {
-    margin: 4px 0;
-    font-size: 0.95rem;
-}
-.profileCard hr {
-    border: none;
-    border-top: 1px solid #ddd;
-    margin: 14px 0;
-}
-/* ----- 🔗 Fix LinkedIn Link Break Issue ----- */
-.profileCard a {
-    display: inline-block;
-    max-width: 100%;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    white-space: normal;
-    line-height: 1.4;
-    color: #004aad;
-    text-decoration: underline;
-}
-
-/* Optional hover effect */
-.profileCard a:hover {
-    color: #002c6e;
-}
-.requirement-card {
-    background: #ffffff;
-    border-left: 5px solid #1e63da;
-    padding: 18px;
-    border-radius: 12px;
+.sidebar h2 {
+    text-align: center;
+    color: #fff;
     margin-bottom: 20px;
-    box-shadow: 0 4px 18px rgba(0,0,0,0.08);
 }
 
-.requirement-card label {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #1e63da;
-    margin-top: 8px;
+.sidebar a {
     display: block;
-}
-
-.requirement-card input,
-.requirement-card select,
-.requirement-card textarea {
-    background: #f6faff;
-    border: 1px solid #bcd6ff;
-}
-
-.requirement-card textarea {
-    min-height: 90px;
-}
-
-.requirement-card button {
-    width: 100%;
-    margin-top: 10px;
-    font-size: 1rem;
-    background: #1e63da;
+    padding: 14px;
+    margin: 10px 0;
     border-radius: 8px;
+    background: rgba(255,255,255,0.18);
+    color: white;
+    cursor: pointer;
+    transition: 0.3s;
 }
 
-.requirement-card button:hover {
-    background: #0c4db3;
+.sidebar a:hover {
+    background: rgba(255,255,255,0.35);
+    transform: translateX(5px);
 }
 
-/* ===========================
-   REQUIREMENT DISPLAY CARD
-=========================== */
-
-.requirement-view-card h3 {
-    color: #1e63da;
-    margin-bottom: 6px;
+/* ================= MAIN ================= */
+.main-area {
+    margin-left: 0;
+    width: 100%;
+    transition: 0.3s;
 }
 
-.requirement-view-card p {
-    font-size: 0.95rem;
-    margin: 4px 0;
+.sidebar:not(.closed) ~ .main-area {
+    margin-left: 240px;
 }
 
-.requirement-view-card .req-meta {
-    font-size: 0.85rem;
-    color: #555;
+#content {
+    padding: 25px;
+}
+
+/* ================= CARD ================= */
+.card {
+    background: rgba(15,23,42,0.95);
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 15px;
+    border: 1px solid rgba(255,255,255,0.08);
+    transition: 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+}
+
+.card h3 {
+    color: #f8fafc;
+}
+
+.card p {
+    color: #cbd5e1;
+}
+
+/* ================= BUTTON ================= */
+button {
+    padding: 10px 14px;
+    border: none;
+    border-radius: 10px;
+   background: linear-gradient(135deg, #38bdf8, #6366f1);
+    color: white;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 10px #38bdf8;
+}
+
+/* ================= FORM ================= */
+input, select, textarea {
+    background: rgba(15,23,42,0.95);
+    color: #f8fafc;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    padding: 10px;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+/* ================= CHAT ================= */
+.chat-container {
+    height: 70vh;
+    background: rgba(255,255,255,0.05);
+    border-radius: 12px;
+    padding: 10px;
+    overflow-y: auto;
+}
+
+.message-row {
+    display: flex;
+    margin: 6px 0;
+}
+
+.message-sent {
+    background: linear-gradient(135deg, #3b82f6, #6366f1);
+    color: white;
+    padding: 8px;
+    border-radius: 10px;
+    margin-left: auto;
+    max-width: 70%;
+}
+
+.message-received {
+    background: #1e293b;
+    color: #e2e8f0;
+    padding: 8px;
+    border-radius: 10px;
+    margin-right: auto;
+    max-width: 70%;
+}
+
+.chat-input-area {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+/* ================= TOGGLE BUTTON ================= */
+#sidebarToggle {
+    position: fixed;
+    top: 35px;
+    left: 5px;
+    z-index: 2000;
+    background: linear-gradient(135deg, #38bdf8, #6366f1);
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
 }
