@@ -280,89 +280,89 @@ public class MainActivity extends AppCompatActivity {
             });
         }
         private Context context;
-            private WebView webView;
-            public AndroidBridge(Context context, WebView webView) {
-                this.context = context;
-                this.webView = webView;
-            }
-            /* ================= TRAINEE ID ================= */
-            private String getTraineeId() {
-                SharedPreferences prefs =
-                        context.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
+        private WebView webView;
+        public AndroidBridge(Context context, WebView webView) {
+            this.context = context;
+            this.webView = webView;
+        }
+        /* ================= TRAINEE ID ================= */
+        private String getTraineeId() {
+            SharedPreferences prefs =
+                    context.getSharedPreferences("MyAppPrefs", Context.MODE_PRIVATE);
 
-                return prefs.getString("uuid", null); // must be saved at login
-            }
-            /* ================= ENROLL BATCH ================= */
-            @JavascriptInterface
-            public void enrollBatch(String batchJson) {
-                try {
-                    String traineeId = getTraineeId();
-                    if (traineeId == null) return;
-
-                    JSONObject batch = new JSONObject(batchJson);
-                    String batchId = batch.getString("batchId");
-
-                    Map<String, Object> batchMap = new HashMap<>();
-                    batchMap.put("batchId", batch.getString("batchId"));
-                    batchMap.put("batchName", batch.getString("batchName"));
-                    batchMap.put("subject", batch.getString("subject"));
-                    batchMap.put("time", batch.getString("time"));
-                    batchMap.put("trainerId", batch.getString("trainerId"));
-
-                    FirebaseDatabase.getInstance()
-                            .getReference("enrollments")
-                            .child(traineeId)
-                            .child(batchId)
-                            .setValue(batchMap)
-                            .addOnSuccessListener(unused ->
-                                    webView.post(() ->
-                                            webView.evaluateJavascript(
-                                                    "onBatchEnrolled()", null
-                                            )
-                                    )
-                            );
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-            /* ================= GET ENROLLED BATCHES ================= */
-            @JavascriptInterface
-            public void getEnrolledBatches() {
+            return prefs.getString("uuid", null); // must be saved at login
+        }
+        /* ================= ENROLL BATCH ================= */
+        @JavascriptInterface
+        public void enrollBatch(String batchJson) {
+            try {
                 String traineeId = getTraineeId();
                 if (traineeId == null) return;
+
+                JSONObject batch = new JSONObject(batchJson);
+                String batchId = batch.getString("batchId");
+
+                Map<String, Object> batchMap = new HashMap<>();
+                batchMap.put("batchId", batch.getString("batchId"));
+                batchMap.put("batchName", batch.getString("batchName"));
+                batchMap.put("subject", batch.getString("subject"));
+                batchMap.put("time", batch.getString("time"));
+                batchMap.put("trainerId", batch.getString("trainerId"));
 
                 FirebaseDatabase.getInstance()
                         .getReference("enrollments")
                         .child(traineeId)
-                        .addListenerForSingleValueEvent(new ValueEventListener() {
-
-                            @Override
-                            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                                JSONArray arr = new JSONArray();
-
-                                for (DataSnapshot snap : snapshot.getChildren()) {
-                                    try {
-                                        JSONObject obj = new JSONObject();
-                                        for (DataSnapshot field : snap.getChildren()) {
-                                            obj.put(field.getKey(), field.getValue());
-                                        }
-                                        arr.put(obj);
-                                    } catch (Exception ignored) {}
-                                }
-
+                        .child(batchId)
+                        .setValue(batchMap)
+                        .addOnSuccessListener(unused ->
                                 webView.post(() ->
                                         webView.evaluateJavascript(
-                                                "showBatchesFromFirebase(" + arr + ")", null
+                                                "onBatchEnrolled()", null
                                         )
-                                );
+                                )
+                        );
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        /* ================= GET ENROLLED BATCHES ================= */
+        @JavascriptInterface
+        public void getEnrolledBatches() {
+            String traineeId = getTraineeId();
+            if (traineeId == null) return;
+
+            FirebaseDatabase.getInstance()
+                    .getReference("enrollments")
+                    .child(traineeId)
+                    .addListenerForSingleValueEvent(new ValueEventListener() {
+
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            JSONArray arr = new JSONArray();
+
+                            for (DataSnapshot snap : snapshot.getChildren()) {
+                                try {
+                                    JSONObject obj = new JSONObject();
+                                    for (DataSnapshot field : snap.getChildren()) {
+                                        obj.put(field.getKey(), field.getValue());
+                                    }
+                                    arr.put(obj);
+                                } catch (Exception ignored) {}
                             }
 
-                            @Override
-                            public void onCancelled(@NonNull DatabaseError error) {}
-                        });
-            }
-            /* ================= FILTER HOME BATCHES ================= */
+                            webView.post(() ->
+                                    webView.evaluateJavascript(
+                                            "showBatchesFromFirebase(" + arr + ")", null
+                                    )
+                            );
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {}
+                    });
+        }
+        /* ================= FILTER HOME BATCHES ================= */
         @JavascriptInterface
         public void filterHomeBatches(String allBatchesJson) {
             String traineeId = getTraineeId();

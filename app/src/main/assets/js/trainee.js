@@ -486,12 +486,43 @@ function displayRequirements(data) {
 
 /* ================= RESUME ================= */
 function showResume() {
-    currentView = "resume";
     document.getElementById("content").innerHTML = `
         <div class="card">
-            <h3>📄 Resume Analyse</h3>
-            <input type="file">
+            <h3>📄 Resume Analysis</h3>
+
+            <input type="file" id="resumeFile" accept="application/pdf"><br><br>
+
+            <textarea id="jdText" placeholder="Paste Job Description"
+            style="width:100%;height:120px;"></textarea><br><br>
+
+            <button onclick="analyzeResume()">Analyze</button>
+
+            <div id="result"></div>
         </div>
+    `;
+}
+
+function analyzeResume(){
+    let file = document.getElementById("resumeFile").files[0];
+    let jd = document.getElementById("jdText").value;
+
+    if(!file || !jd){
+        alert("Upload resume & enter JD");
+        return;
+    }
+
+    let reader = new FileReader();
+    reader.onload = function(){
+        AndroidBridge.analyzeResume(reader.result, jd);
+    }
+    reader.readAsDataURL(file);
+}
+
+function showResumeResult(res){
+    document.getElementById("result").innerHTML = `
+        <h3>Score: ${res.score}%</h3>
+        <p><b>Missing Skills:</b> ${res.missing.join(", ")}</p>
+        <p>${res.suggestion}</p>
     `;
 }
 

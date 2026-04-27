@@ -38,6 +38,8 @@ dependencies {
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
+    implementation("com.tom_roush:pdfbox-android:2.0.27.0")
+
 
     // 🔥 Firebase
     implementation("com.google.firebase:firebase-analytics:22.1.2")
